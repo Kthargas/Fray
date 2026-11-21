@@ -9,7 +9,7 @@ local COLORS = {
 	locked = { 0.62, 0.6, 0.66 },
 }
 
--- Zauberleiste im Stil von FlareUI: Braunplatte mit Bronzerahmen, Balken mit der Forever-Textur,
+-- Cast bar: brown plate with a bronze frame (falls back when the Blizzard casting bar art is missing),
 -- Symbol links mit grauem Bevel-Rahmen (bronze getoent).
 local function CreateCastBar(key, unit, w, h, label, defX, defY)
 	local f = CreateFrame("Frame", "FrayCast" .. key, UIParent)

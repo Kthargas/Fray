@@ -12,3 +12,4 @@ First public release.
 - Cooldown bar, quality-of-life options (auto-sell grey items, auto-repair).
 - Settings window in the style of the game menu (`/fray`), frame mover with grid and coordinates, global and
   per-element scale, frame colour presets and a test mode.
+- No third-party assets: Fray uses the game's own fonts and interface graphics, plus textures created for this project.

@@ -75,14 +75,13 @@ Type `/fray` to open the settings window.
 - **No floating combat text** on clients without a combat log for addons (including Forever).
 - The in-game user interface is currently **German**; an English translation is planned.
 - The Blizzard art is loaded from the game client by name. If your client does not have an atlas, Fray falls back to its
-  own textures.
+  own textures. Fonts always come from the client.
 
 ## Credits and licences
 
-- Visual inspiration and the icon border: [FlareUI](https://github.com/malkkav/FlareUI) by Malkkav (MIT).
-- Fonts: Roboto Condensed (Apache 2.0) and Marcellus (SIL OFL 1.1). See [`LICENSES/`](LICENSES).
-- Fray itself is released under the [MIT License](LICENSE).
-- Fray does not ship Blizzard art; it only refers to the client's interface graphics by name.
+- Fray is released under the [MIT License](LICENSE).
+- Fray contains no third-party assets. Its textures were created for this project; text and titles use the game's own fonts.
+- Fray does not ship Blizzard art; it only refers to the client's interface graphics by name (the game loads them).
 - *World of Warcraft* is a trademark of Blizzard Entertainment, Inc. This project is not affiliated with or endorsed by Blizzard.
 
 <br>

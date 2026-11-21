@@ -8,16 +8,22 @@ F.movables = {}
 F.unlocked = false
 
 F.TEXROOT = "Interface\\AddOns\\Fray\\Textures\\"
-F.FONTROOT = "Interface\\AddOns\\Fray\\Fonts\\"
 F.WHITE = "Interface\\Buttons\\WHITE8X8"
 
--- Schriften wie FlareUI: Roboto Condensed (Text), Marcellus (Titel). Fehlt die Datei, nimmt der Client
--- seine eigene Schrift (die Pfade werden nicht geprueft; so bleibt es auf jedem Client lesbar).
-F.FONT = F.FONTROOT .. "RobotoCondensed-Regular.ttf"
-F.FONT_BOLD = F.FONTROOT .. "RobotoCondensed-Bold.ttf"
-F.FONT_TITLE = F.FONTROOT .. "Marcellus-Regular.ttf"
+-- Fonts: only the game's own fonts, resolved through Blizzard's font objects so they fit the client's locale.
+local function GameFont(objName, fallback)
+	local o = _G[objName]
+	if o and o.GetFont then
+		local ok, path = pcall(o.GetFont, o)
+		if ok and type(path) == "string" and path ~= "" then return path end
+	end
+	return fallback
+end
+F.FONT = STANDARD_TEXT_FONT or GameFont("GameFontNormal", "Fonts\\FRIZQT__.TTF")
+F.FONT_BOLD = F.FONT
+F.FONT_TITLE = GameFont("QuestTitleFont", F.FONT)
 
--- Bronze-Palette (aus FlareUIs Einstellungsfenster)
+-- Copper palette (matches the Forever interface)
 F.PAL = {
 	edge = { 0.58, 0.46, 0.30 },     -- Bronze (Fenster, Symbole)
 	rim = { 0.82, 0.76, 0.72 },      -- heller Plattenrand wie bei Namensplaketten
@@ -441,7 +447,7 @@ function F.CreateGlow(frame, fadeLeft)
 	return glow
 end
 
--- Abgerundete dunkle Braunplatte mit Bronzerahmen (3-Slice aus Plate-*.tga, an FlareUIs Einheitenrahmen
+-- Abgerundete dunkle Braunplatte mit Bronzerahmen (3-Slice aus Plate-*.tga, 
 -- angelehnt). Liegt bei (x0, -y0) mit Groesse w x h im Parent. SetBorderColor faerbt den Rahmen,
 -- SetGlow zeigt Schimmer und Leucht-Halo (gewaehlt).
 function F.CreateBand(parent, x0, y0, w, h, fadeLeft)
@@ -491,7 +497,7 @@ function F.CreateBand(parent, x0, y0, w, h, fadeLeft)
 	return band
 end
 
--- Balken: dunkler Hintergrund + FlareUI-Balkentextur (Farbe per SetStatusBarColor), duenne dunkle Kante.
+-- Balken: dunkler Hintergrund + bar texture (Farbe per SetStatusBarColor), duenne dunkle Kante.
 -- style: nil = Pille (beidseitig rund); "top"/"bottom" = links gerade, rechts oben/unten abgerundet
 -- (laeuft unter das Schild und sitzt buendig in den Ecken der Platte).
 function F.CreateSlimBar(parent, w, h, style)
