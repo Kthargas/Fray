@@ -2,8 +2,8 @@ local ADDON, F = ...
 local M = {}
 F:RegisterModule("alerts", M)
 
-local state = {}      -- guid -> hatte Aggro beim letzten Scan
-local lastWarn = {}   -- guid -> Zeitpunkt der letzten Warnung
+local state = {}      -- guid -> had aggro at the last scan
+local lastWarn = {}   -- guid -> time of the last alert
 local lastLowHP = 0
 
 local FONT = STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
@@ -14,13 +14,13 @@ local KINDS = {
 	green = { tex = "Shield-Green.tga", title = { 0.62, 0.95, 0.66 } },
 }
 
--- Warntoene (Dateien des Clients); "off" = kein Ton
+-- Alert sounds (client files); "off" = no sound
 local SOUNDS = {
-	{ key = "off", name = "Aus" },
-	{ key = "raid", name = "Raidwarnung", file = "Sound\\Interface\\RaidWarning.ogg" },
-	{ key = "boss", name = "Boss-Emote", file = "Sound\\Interface\\RaidBossEmoteWarning.ogg" },
-	{ key = "ready", name = "Bereitschaftscheck", file = "Sound\\Interface\\ReadyCheck.ogg" },
-	{ key = "alarm", name = "Wecker", file = "Sound\\Interface\\AlarmClockWarning3.ogg" },
+	{ key = "off", name = "Off" },
+	{ key = "raid", name = "Raid warning", file = "Sound\\Interface\\RaidWarning.ogg" },
+	{ key = "boss", name = "Boss emote", file = "Sound\\Interface\\RaidBossEmoteWarning.ogg" },
+	{ key = "ready", name = "Ready check", file = "Sound\\Interface\\ReadyCheck.ogg" },
+	{ key = "alarm", name = "Alarm clock", file = "Sound\\Interface\\AlarmClockWarning3.ogg" },
 }
 M.SOUNDS = SOUNDS
 
@@ -33,9 +33,9 @@ function M.PlaySound(key)
 	end
 end
 
--- Banner: Schild + Titel + Untertitel. kind: red / orange / green.
--- sub: Format-Text, danach die Werte ("%s  >  %s", name, ziel); Namen duerfen geheime Werte sein.
--- soundOpt: Name der Ton-Einstellung ("soundGain" ...), true = Raidwarnung, false/nil = kein Ton.
+-- Banner: shield + title + subtitle. kind: red / orange / green.
+-- sub: format string, followed by its values ("%s  >  %s", name, target); names may be secret values.
+-- soundOpt: name of the sound setting ("soundGain" ...), true = raid warning, false/nil = no sound.
 function M:Alert(title, sub, kind, soundOpt, ...)
 	local f = M.frame
 	local o = F.db.alerts
@@ -50,7 +50,7 @@ function M:Alert(title, sub, kind, soundOpt, ...)
 	f.title:SetTextColor(k.title[1], k.title[2], k.title[3])
 	if sub and o.showName ~= false then f.sub:SetFormattedText(sub, ...) else f.sub:SetText("") end
 	if f.blizzBanner then
-		-- Schild + Text als Einheit mittig im Frame ausrichten, die beiden Zeilen zueinander zentriert
+		-- Centre shield + text as one unit in the frame, with the two lines centred on each other
 		f.title:SetWidth(700)
 		f.sub:SetWidth(700)
 		local okT, tw = pcall(f.title.GetStringWidth, f.title)
@@ -62,7 +62,7 @@ function M:Alert(title, sub, kind, soundOpt, ...)
 		f.sub:SetWidth(w)
 		f.title:SetJustifyH("CENTER")
 		f.sub:SetJustifyH("CENTER")
-		-- Schild mittig UEBER dem Text, darunter Titel und Untertitel, alles auf der Mittelachse des Frames
+		-- Shield centred ABOVE the text, then title and subtitle, all on the frame's centre axis
 		f.shield:ClearAllPoints()
 		f.shield:SetPoint("TOP", f.inner, "TOP", 0, 0)
 		f.title:ClearAllPoints()
@@ -78,7 +78,7 @@ function M:Alert(title, sub, kind, soundOpt, ...)
 	end
 end
 
--- Pause pro Gegner und Ereignis
+-- Pause per enemy and event
 local function Cooldown(key, secs)
 	local now = GetTime()
 	if lastWarn[key] and now - lastWarn[key] < secs then return false end
@@ -92,13 +92,13 @@ function M:Scan()
 	local inCombat = F.Bool(UnitAffectingCombat("player"))
 	local pause = o.pause or 8
 
-	-- HP-Warnung nur, wenn die HP lesbar sind (auf Forever sind sie es meist nicht)
+	-- Low health alert only if health is readable (on Forever it usually is not)
 	if o.lowHealth and inCombat and not F.Bool(UnitIsDeadOrGhost("player")) then
 		local cur, max = UnitHealth("player"), UnitHealthMax("player")
 		if F.AllReadable(cur, max) and type(cur) == "number" and type(max) == "number" and max > 0
 			and cur / max < (o.lowHealthPct or 25) / 100 and now - lastLowHP > 10 then
 			lastLowHP = now
-			M:Alert("Niedrige HP!", nil, "red", "soundLow")
+			M:Alert("Low health!", nil, "red", "soundLow")
 		end
 	end
 
@@ -121,27 +121,27 @@ function M:Scan()
 				local tt = unit .. "target"
 				local hasTarget = F.Bool(UnitExists(tt))
 				if tanking and not was then
-					-- Aggro bekommen (fuer Tanks normalerweise gewollt, daher abschaltbar)
+					-- Aggro gained (normally wanted by tanks, hence switchable)
 					if o.gain and (not F.db.tank or o.gainTank) and Cooldown(guid .. "g", pause) then
 						M:Alert("Aggro!", "%s", "red", "soundGain", UnitName(unit))
 					end
 				elseif was and not tanking then
-					-- Aggro verloren: ein Gegner, der eben noch auf dir war, hat das Ziel gewechselt
+					-- Aggro lost: an enemy that was on you a moment ago switched target
 					if o.loss and Cooldown(guid .. "l", pause) then
 						if hasTarget then
-							M:Alert("Aggro verloren", "%s  >  %s", "orange", "soundLoss", UnitName(unit), UnitName(tt))
+							M:Alert("Aggro lost", "%s  >  %s", "orange", "soundLoss", UnitName(unit), UnitName(tt))
 						else
-							M:Alert("Aggro verloren", "%s", "orange", "soundLoss", UnitName(unit))
+							M:Alert("Aggro lost", "%s", "orange", "soundLoss", UnitName(unit))
 						end
 					end
 				elseif F.db.tank and o.tankWarn and not tanking and hasTarget and F.Bool(UnitIsPlayer(tt))
 					and not F.Bool(UnitIsUnit(tt, "player")) and F.Bool(UnitAffectingCombat(unit))
 					and Cooldown(guid .. "t", 6) then
-					-- Tank: ein Gegner greift einen Mitspieler an (nie auf dir gewesen)
-					M:Alert("Gegner ohne Aggro", "%s  >  %s", "orange", "soundLoss", UnitName(unit), UnitName(tt))
+					-- Tank: an enemy attacks a party member (it never was on you)
+					M:Alert("Enemy without aggro", "%s  >  %s", "orange", "soundLoss", UnitName(unit), UnitName(tt))
 				end
 				if o.threatHigh and known and not tanking and pct >= (o.threatPct or 90) and Cooldown(guid .. "h", pause) then
-					M:Alert("Threat hoch", "%s  (%d%%)", "orange", "soundThreat", UnitName(unit), pct)
+					M:Alert("High threat", "%s  (%d%%)", "orange", "soundThreat", UnitName(unit), pct)
 				end
 			end
 		end
@@ -151,7 +151,7 @@ end
 
 local W, H = 300, 50
 
--- Banner wie die Boss-Warnungen: kein Kasten, grosse farbige Schrift mit dicker Kontur; links das Status-Schild.
+-- Banner like boss warnings: no box, large coloured text with a thick outline; status shield on the left.
 local function BuildBlizz(f, inner)
 	f:SetSize(520, 130)
 	f.blizzBanner = true
@@ -179,13 +179,13 @@ function M:Init()
 	f:SetFrameStrata("HIGH")
 	f:Hide()
 
-	-- Inhalt in einem Kind-Frame, damit der "Pop" skalieren kann, ohne die Position zu verschieben
+	-- Content in a child frame so the "pop" can scale without moving the position
 	local inner = CreateFrame("Frame", nil, f)
 	inner:SetAllPoints()
 	f.inner = inner
 	if not BuildBlizz(f, inner) then
 	f.band = F.CreateBand(inner, 30, 9, W - 30, 32)
-	-- Schild in eigenem Frame ueber der Platte (sonst liegt die Platte davor)
+	-- Shield in its own frame above the plate (otherwise the plate would cover it)
 	f.emblem = CreateFrame("Frame", nil, inner)
 	f.emblem:SetSize(64, 64)
 	f.emblem:SetPoint("CENTER", inner, "LEFT", 33, 0)
@@ -226,7 +226,7 @@ function M:Init()
 		self.inner:SetScale(s)
 	end)
 	M.frame = f
-	F:MakeMovable(f, "alert", "Warnmeldungen", 0, 200)
+	F:MakeMovable(f, "alert", "Alerts", 0, 200)
 
 	local d = CreateFrame("Frame")
 	d.t = 0

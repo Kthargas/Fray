@@ -10,7 +10,7 @@ local COLORS = {
 }
 
 -- Cast bar: brown plate with a bronze frame (falls back when the Blizzard casting bar art is missing),
--- Symbol links mit grauem Bevel-Rahmen (bronze getoent).
+-- icon on the left with a grey bevel frame (tinted bronze).
 local function CreateCastBar(key, unit, w, h, label, defX, defY)
 	local f = CreateFrame("Frame", "FrayCast" .. key, UIParent)
 	local iconSize = h + 4
@@ -29,7 +29,7 @@ local function CreateCastBar(key, unit, w, h, label, defX, defY)
 	f.iconBorder:SetVertexColor(unpack(F.PAL.edge))
 
 	f.plate = F.CreateBand(f, iconSize + 4, 0, w, h + 4)
-	-- Blizzards Zauberleisten-Rahmen und -Hintergrund statt unserer Platte
+	-- Blizzard's cast bar frame and background instead of our plate
 	local atlasFrame = F.AtlasThreeSlice(f, "castFrame", "OVERLAY", 1, 14)
 	if atlasFrame then
 		f.plate.frame:Hide()
@@ -40,13 +40,13 @@ local function CreateCastBar(key, unit, w, h, label, defX, defY)
 		f.back:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -3, 3)
 	end
 
-	-- Balken fuellt die Platte buendig (Rahmen 2.5 px); links gerade, rechts abgerundet wie die Platte
+	-- The bar fills the plate flush (2.5 px frame); straight on the left, rounded on the right like the plate
 	f.bar = F.CreateSlimBar(f, w - 8, h - 4, "right")
 	f.bar:SetPoint("LEFT", f, "LEFT", iconSize + 4 + 4, 0)
 	f.bar:SetFrameLevel(f.plate.frame:GetFrameLevel() + 1)
 	F.AtlasBar(f.bar, "castFill", "BarRight.tga")
 
-	-- Spark an der Vorderkante der Fuellung (geht auch, wenn der Fortschritt ein geheimer Wert ist)
+	-- Spark at the leading edge of the fill (also works when the progress is a secret value)
 	f.spark = f.bar:CreateTexture(nil, "OVERLAY")
 	local sparkAtlas = F.AtlasName("castSpark")
 	if sparkAtlas then
@@ -62,7 +62,7 @@ local function CreateCastBar(key, unit, w, h, label, defX, defY)
 	f.over:SetAllPoints(f.bar)
 	f.over:SetFrameLevel(f.bar:GetFrameLevel() + 4)
 	if atlasFrame then
-		-- Rahmen in einem eigenen Frame ueber dem Balken (Balken sind Kind-Frames und lagen sonst darueber)
+		-- Frame in its own frame above the bar (bars are child frames and would otherwise sit on top)
 		local bf = CreateFrame("Frame", nil, f)
 		bf:SetAllPoints(f)
 		bf:SetFrameLevel(f.bar:GetFrameLevel() + 6)
@@ -92,7 +92,7 @@ local function SetKind(f, kind)
 	f.bar:SetStatusBarColor(c[1], c[2], c[3])
 end
 
--- Fortschritt: Dauer-Objekt des Clients (auch bei geheimen Zeiten), sonst Rechnung mit lesbaren Zeiten.
+-- Progress: the client's duration object (works with secret times), otherwise calculated from readable times.
 local function SetProgress(f, unit, channel, startMS, endMS)
 	if UnitCastingDuration and f.bar.SetTimerDuration and Enum and Enum.StatusBarTimerDirection then
 		local duration
@@ -128,7 +128,7 @@ local function Poll(f)
 		f.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
 		f.bar:SetMinMaxValues(0, 1)
 		f.bar:SetValue(0.5)
-		f.spell:SetText("Zauber (Platzhalter)")
+		f.spell:SetText("Spell (placeholder)")
 		f.time:SetText("1.5")
 		f:Show()
 		return
@@ -170,8 +170,8 @@ local function Poll(f)
 end
 
 function M:Init()
-	CreateCastBar("Target", "target", 300, 20, "Cast-Bar Ziel", 0, 120)
-	CreateCastBar("Focus", "focus", 220, 15, "Cast-Bar Fokus", 0, 85)
+	CreateCastBar("Target", "target", 300, 20, "Target cast bar", 0, 120)
+	CreateCastBar("Focus", "focus", 220, 15, "Focus cast bar", 0, 85)
 
 	local d = CreateFrame("Frame")
 	d.t = 0

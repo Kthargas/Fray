@@ -2,59 +2,59 @@ local ADDON, F = ...
 local M = {}
 F:RegisterModule("enemy", M)
 
--- Gegnerliste: Original-Dragonflight-Rahmen (Ring links, Band rechts, aus dem Atlas uiunitframe.blp)
--- mit Aggro-Schild, Elite-Symbolen, Ressourcen- und Zauberstreifen.
--- Die Zeilen sind normale (nicht gesicherte) Frames: Sie werden im Kampf live nach Threat sortiert und
--- ruecken lueckenlos zusammen. Klicken zum Zielwechsel gibt es bewusst nicht: Gesicherter Code kennt
--- Plaketten-Einheiten nicht und laesst sich im Kampf nicht umstellen (auch andere Addons loesen das nicht).
-local TOKENS = 12             -- nameplate1..12 haben je eine feste Klickflaeche
-local EXTRA = 6               -- Zusatzplaetze fuer Gegner ohne Plakette (nicht klickbar)
+-- Enemy list: original Dragonflight frame art (ring on the left, band on the right, from the unit frame atlases)
+-- with aggro shield, elite icons, resource and cast strips.
+-- The rows are normal (non-secure) frames: they are sorted live by threat in combat and
+-- close up without gaps. There is deliberately no click-to-target: secure code does not know
+-- nameplate units and cannot be re-arranged in combat (other addons do not solve this either).
+local TOKENS = 12             -- nameplate1..12 each have a fixed click area
+local EXTRA = 6               -- extra slots for enemies without a nameplate (not clickable)
 local MAX_ROWS = TOKENS + EXTRA
 local COLGAP = 8
-local function PerCol() return F.db.enemy.perCol or 6 end   -- danach beginnt eine weitere Spalte
+local function PerCol() return F.db.enemy.perCol or 6 end   -- after that another column starts
 local ROW_W, GAP = 232, 6
 local ROW_H = 62
 local PITCH = ROW_H + GAP
 
--- Blizzard-Zielrahmen-Zeilen : gibt der Client die Ziel-Frame-Atlanten her, besteht jede Zeile aus
--- Blizzards eigenem Rahmen, Balken und Masken (verkleinert um S). Sonst bleibt die eigene Optik unten.
+-- Blizzard target frame rows: if the client provides the target frame atlases, every row consists of
+-- Blizzard's own frame, bars and masks (scaled by S). Otherwise our own look further below stays.
 local BLIZZ = F.AtlasName("tFrame") ~= nil and F.AtlasName("tType") ~= nil and F.AtlasName("tHealth") ~= nil
 local S = 0.85
-local MIRROR = true   -- Portrait links (Blizzards Rahmen werden waagerecht gespiegelt)
+local MIRROR = true   -- Portrait on the left (Blizzard's frames are mirrored horizontally)
 local YOFF = 0
 if BLIZZ then
 	ROW_W, ROW_H, GAP = 232 * S, 100 * S, 2
 	PITCH = 72
-	YOFF = 12 * S   -- Rahmenkunst beginnt erst etwa 12 px unter dem Frame-Rand
+	YOFF = 12 * S   -- the frame art only starts about 12 px below the frame edge
 end
--- Geometrie: links das Wappenschild (mit Abzeichen), rechts EINE abgerundete Platte. Die Balken fuellen
--- sie buendig aus (Plattenrand 2.5 px) und laufen links unter das Schild, damit dort keine Rundung zu sehen ist.
+-- Geometry: shield (with badge) on the left, ONE rounded plate on the right. The bars fill
+-- it flush (plate edge 2.5 px) and run under the shield so no rounding is visible there.
 local ORB = 72
 local ORB_CX, ORB_CY = 33, -31
 local PLATE_X, PLATE_Y, PLATE_H = 30, 13, 36
-local BAR_X = 32                -- Beginn der Balken (liegt unter dem Schild)
-local EDGE = 4                  -- Dicke des Plattenrahmens (schwarz, hell, schwarz)
+local BAR_X = 32                -- start of the bars (lies under the shield)
+local EDGE = 4                  -- thickness of the plate frame (black, light, black)
 local HP_H, CAST_H = 20, 7
-local FULL_H = HP_H + 1 + CAST_H   -- Lebensbalken ohne zweiten Balken fuellt die ganze Platte
+local FULL_H = HP_H + 1 + CAST_H   -- a health bar without a second bar fills the whole plate
 local BARTEX = { split = "BarTop.tga", full = "BarFull.tga" }
-local LEFT = 68                 -- Text beginnt rechts vom Schild
-local PADX = 8                  -- Textabstand zum rechten Rand
+local LEFT = 68                 -- text starts to the right of the shield
+local PADX = 8                  -- text distance to the right edge
 
 local rows = {}
 
--- Status = Aggro-Lage gegenueber DIR: rot = du hast die Aggro, orange = Aggro verloren / hoher Threat,
--- gruen = kaum Threat. (Wappenschild-Symbole)
+-- Status = aggro situation relative to YOU: red = you have aggro, orange = aggro lost / high threat,
+-- green = little threat. (shield icons)
 local STATUS_TEX = {
 	red = "Shield-Red.tga",
 	orange = "Shield-Orange.tga",
 	yellow = "Shield-Orange.tga",
 	green = "Shield-Green.tga",
 }
-local hadAggro = {}     -- guid -> Zeitpunkt, zu dem der Gegner zuletzt auf dir war
-local LOST_SECS = 15     -- nach Aggroverlust bleibt der Gegner so lange orange (solange noch etwas Threat da ist)
+local hadAggro = {}     -- guid -> time at which the enemy was last on you
+local LOST_SECS = 15     -- after losing aggro the enemy stays orange this long (as long as there is still some threat)
 
--- known = Threat-Werte lesbar. Sonst (Forever, Plaketten im Kampf) zaehlt nur: zielt der Gegner auf dich?
--- Rot = ja; Orange = er war in den letzten LOST_SECS auf dir (Aggro verloren); sonst Gruen.
+-- known = threat values readable. Otherwise (Forever, nameplates in combat) only this counts: is the enemy targeting you?
+-- Red = yes; orange = it was on you within the last LOST_SECS (aggro lost); otherwise green.
 local function ThreatStatus(unit, tanking, pct, guid, known)
 	local now = GetTime()
 	if tanking or F.TargetsMe(unit) then
@@ -78,10 +78,10 @@ local function AtlasInfoOf(key)
 	if ok and info then return name, info.width or 0, info.height or 0 end
 end
 
--- Spiegelung: Ausschnitt des Atlas links/rechts vertauschen
+-- Mirroring: swap left/right of the atlas region
 local function Flip(tex, name)
 	if not MIRROR then return end
-	-- bei Atlas-Texturen gelten die Koordinaten relativ zum Atlas-Ausschnitt: (1,0,0,1) = waagerecht gespiegelt
+	-- for atlas textures the coordinates are relative to the atlas region: (1,0,0,1) = mirrored horizontally
 	tex:SetTexCoord(1, 0, 0, 1)
 end
 
@@ -106,7 +106,7 @@ end
 
 local POWER_KEY = { MANA = "tMana", RAGE = "tRage", ENERGY = "tEnergy", FOCUS = "tFocus", RUNIC_POWER = "tRunic" }
 
--- Statusbar mit Atlas-Fuellung; Maske rundet die Enden wie bei Blizzard
+-- Status bar with atlas fill; a mask rounds the ends like Blizzard does
 local function AtlasStatusBar(row, level, w, h)
 	local bar = CreateFrame("StatusBar", nil, row)
 	bar:SetFrameLevel(level)
@@ -124,8 +124,8 @@ local function SetBarAtlas(bar, key)
 end
 
 local function BlizzMask(row, bar, key, dx, dy)
-	-- Gespiegelt kann Blizzards Maske nicht benutzt werden (sie verdeckte den ganzen Balken). Stattdessen eine eigene
-	-- Maske aus BarFull.tga: links gerade, rechts abgerundet - passend zu den Rinnen des gespiegelten Rahmens.
+	-- Blizzard's mask cannot be used when mirrored (it hid the whole bar). Use our own mask from
+	-- BarFull.tga instead: straight on the left, rounded on the right - fits the troughs of the mirrored frame.
 	if MIRROR then
 		if not bar.mask then
 			bar.mask = row:CreateMaskTexture()
@@ -163,7 +163,7 @@ local function CreateRowBlizz(index)
 	function row:SetBorderColor() end
 	local lvl = row:GetFrameLevel() + 1
 
-	-- Portrait hinter dem Rahmen, rund maskiert
+	-- Portrait behind the frame, round mask
 	row.portrait = row:CreateTexture(nil, "BACKGROUND", nil, 1)
 	row.portrait:SetSize(58 * S, 58 * S)
 	row.portrait:SetPoint("TOPLEFT", row, "TOPLEFT", 26 * S, -19 * S)
@@ -176,16 +176,16 @@ local function CreateRowBlizz(index)
 		row.portrait:AddMaskTexture(m)
 	end
 
-	-- Rahmen, Kampf-Leuchten (Status), Auswahl-Leuchten, Typ-Leiste
+	-- Frame, combat glow (status), selection glow, type bar
 	row.frameTex = NewAtlasTex(row, "BACKGROUND", 2, "tFrame")
 	row.frameTex:SetPoint("CENTER", row, "CENTER", 0, 0)
-	-- gleichmaessig dunkle Rinnen in jeder Zeile (sonst scheint die Umgebung unterschiedlich durch die Rinnen)
+	-- evenly dark troughs in every row (otherwise the surroundings shine through the troughs differently)
 	row.backFill = row:CreateTexture(nil, "BACKGROUND", nil, 1)
 	row.backFill:SetColorTexture(0.07, 0.05, 0.035, 1)
 	row.backFill:SetSize(127 * S, 47 * S)
 	row.backFill:SetPoint("TOPLEFT", row, "TOPLEFT", 83 * S, -24.6 * S)
-	-- Auswahl: Blizzards rotes Kampf-Leuchten (Frame + Portraitring), in Gold. Die rote Textur wird entsaettigt und
-	-- eingefaerbt; drei Lagen uebereinander ersetzen die verlorene Helligkeit.
+	-- Selection: Blizzard's red combat glow (frame + portrait ring), in gold. The red texture is desaturated and
+	-- tinted; three layers on top of each other replace the lost brightness.
 	row.glows = {}
 	for i = 1, 3 do
 		local t = NewAtlasTex(row, "ARTWORK", 1 + i, "tFlash")
@@ -200,22 +200,22 @@ local function CreateRowBlizz(index)
 	row.selGlow = row.glows[1]
 	row.type = NewAtlasTex(row, "ARTWORK", 0, "tType")
 	if row.type then
-		row.type:SetPoint("TOPLEFT", row, "TOPLEFT", 82.1 * S, -25 * S)   -- Fuellung beginnt bei der Rinne (84.1)
+		row.type:SetPoint("TOPLEFT", row, "TOPLEFT", 82.1 * S, -25 * S)   -- the fill starts at the trough (84.1)
 		row.type:SetWidth(row.type:GetWidth() * 1.015)
 	end
 
-	-- Verzierungen (Elite, Boss, selten)
+	-- Decorations (elite, boss, rare)
 	row.deco = NewAtlasTex(row, "ARTWORK", 3, "tElite", 0.85) or row:CreateTexture(nil, "ARTWORK", nil, 3)
 	row.deco:SetPoint("TOPLEFT", row, "TOPLEFT", 11 * S, -8 * S)
 	row.deco:Hide()
 
-	-- Balken
+	-- Bars
 	row.hp = AtlasStatusBar(row, lvl, 123.0, 19.5)
 	row.hp:SetPoint("TOPLEFT", row, "TOPLEFT", 85.9 * S, -41.5 * S)
 	SetBarAtlas(row.hp, "tHealth")
 	BlizzMask(row, row.hp, "tHealthMask", -1, 6)
-	-- Der Atlas-Balken hat ca. 6 % durchsichtigen Rand: Rahmen etwas groesser, damit die sichtbare Flaeche genau in
-	-- die untere Rinne passt (Rinne: x 83..209, y 59..69.6).
+	-- The atlas bar has an approx. 6 % transparent margin: make the frame a bit larger so the visible area fits exactly into
+	-- the lower trough (trough: x 83..209, y 59..69.6).
 	row.power = AtlasStatusBar(row, lvl, 134, 11.5)
 	row.power:SetPoint("TOPLEFT", row, "TOPLEFT", 80.5 * S, -59.9 * S)
 	row.power.mask = row:CreateMaskTexture()
@@ -228,7 +228,7 @@ local function CreateRowBlizz(index)
 	end
 	SetBarAtlas(row.power, "tMana")
 	row.power:Hide()
-	-- Castbar: eigener Streifen UNTER dem Frame (Ressource bleibt in der unteren Rinne des Frames)
+	-- Cast bar: its own strip BELOW the frame (the resource stays in the lower trough of the frame)
 	row.cast = AtlasStatusBar(row, lvl, 126, 9)
 	row.cast:SetPoint("TOPLEFT", row, "TOPLEFT", 83 * S, -76.5 * S)
 	if F.AtlasName("castFill") then SetBarAtlas(row.cast, "castFill") else row.cast:SetStatusBarColor(0.98, 0.74, 0.36) end
@@ -243,7 +243,7 @@ local function CreateRowBlizz(index)
 	row.cast.text:SetPoint("CENTER", row.cast, "CENTER", 0, 0)
 	row.cast.text:SetTextColor(1, 0.92, 0.7)
 	row.castText = row.cast.text
-	-- Blizzards Zauberleisten-Rahmen um den Streifen (drei Teile aus UI-CastingBar-Frame), sichtbar mit dem Streifen
+	-- Blizzard's cast bar frame around the strip (three parts of UI-CastingBar-Frame), visible with the strip
 	row.castFrame = CreateFrame("Frame", nil, row)
 	row.castFrame:SetAllPoints(row)
 	row.castFrame:SetFrameLevel(row.cast:GetFrameLevel() + 3)
@@ -262,7 +262,7 @@ local function CreateRowBlizz(index)
 	row.cast:SetScript("OnHide", function() row.castFrame:Hide() end)
 	row.cast:Hide()
 
-	-- Texte, Raidmarker, Buchstaben-Abzeichen
+	-- Texts, raid marker, letter badge
 	row.over = CreateFrame("Frame", nil, row)
 	row.over:SetAllPoints()
 	row.over:SetFrameLevel(lvl + 5)
@@ -276,20 +276,20 @@ local function CreateRowBlizz(index)
 	row.info:SetSize(110 * S, 12)
 	row.mark = row.over:CreateTexture(nil, "OVERLAY", nil, 3)
 	row.mark:SetSize(26 * S, 26 * S)
-	row.mark:SetPoint("CENTER", row, "TOPLEFT", 147 * S, -10.5 * S)   -- mittig ueber dem Namen
+	row.mark:SetPoint("CENTER", row, "TOPLEFT", 147 * S, -10.5 * S)   -- centred above the name
 	row.mark:SetTexture("Interface/TargetingFrame/UI-RaidTargetingIcons")
 	row.mark:Hide()
 	row.star = NewAtlasTex(row.over, "OVERLAY", 1, "tStar")
 	if row.star then row.star:SetPoint("CENTER", row.portrait, "BOTTOM", 0, 0); row.star:Hide() end
-	-- kleines Drachen-Symbol (Elite) oben rechts am Portraitring, statt der grossen Drachen-Verzierung
+	-- small dragon icon (elite) on the portrait ring, instead of the large dragon decoration
 	row.dragon = row.over:CreateTexture(nil, "OVERLAY", nil, 2)
 	row.dragon:SetSize(30 * S, 30 * S)
-	row.dragon:SetPoint("CENTER", row.portrait, "TOPLEFT", -2 * S, -2.5 * S)   -- gleiche Spalte wie das Schild   -- auf dem Portraitring, oben links
+	row.dragon:SetPoint("CENTER", row.portrait, "TOPLEFT", -2 * S, -2.5 * S)   -- same column as the shield   -- on the portrait ring, top left
 	row.dragon:Hide()
 
-	-- Aggro-Symbol (frei stehend, unten links am Portrait): unser Wappenschild, komplett in der Statusfarbe
-	-- (Shield-Red/Orange/Green.tga, dazu Metallrahmen). Rot pulsiert (Aggro auf dir), Orange leuchtet ruhig
-	-- (verloren), Gruen ist gedaempft (sicher).
+	-- Aggro indicator (free standing, bottom left of the portrait): our crest shield, completely in the status colour
+	-- (Shield-Red/Orange/Green.tga, plus metal frame). Red pulses (aggro on you), orange glows calmly
+	-- (lost), green is muted (safe).
 	row.badge = CreateFrame("Frame", nil, row)
 	row.badge:SetSize(46 * S, 46 * S)
 	row.badge:SetPoint("CENTER", row.portrait, "BOTTOMLEFT", -2 * S, 4 * S)
@@ -316,14 +316,14 @@ local function CreateRowBlizz(index)
 		an:SetDuration(0.5)
 		row.badge.pulse = ag
 	end
-	row.letter = F.CreateText(row.badge, 11, "CENTER")   -- nur noch Platzhalter fuer gemeinsamen Code
+	row.letter = F.CreateText(row.badge, 11, "CENTER")   -- only a placeholder for shared code now
 	row.letter:Hide()
 
 	row:Hide()
 	return row
 end
 
--- normal = Lebensbalken + Streifen (Ressource/Cast); minus = nur Lebensbalken (Blizzards Minus-Mob-Rahmen)
+-- normal = health bar + strip (resource/cast); minus = health bar only (Blizzard's minus mob frame)
 local function BlizzLayout(row, mode)
 	if mode == "minus" and not AtlasInfoOf("mFrame") then mode = "normal" end
 	if row.mode == mode then return end
@@ -349,7 +349,7 @@ local function BlizzLayout(row, mode)
 	end
 end
 
--- Drachen-Symbol: Atlas der Namensplaketten, sonst die Standard-Grafik des Clients (Silber = entsaettigt)
+-- Dragon icon: nameplate atlas, otherwise the client's default graphic (silver = desaturated)
 local function SetDragon(row, kind)
 	if not row.dragon then return end
 	if not kind then row.dragon:Hide() return end
@@ -365,7 +365,7 @@ local function SetDragon(row, kind)
 	row.dragon:Show()
 end
 
--- Klassifizierung -> Verzierung (Elite-Gold, Boss geflügelt, selten silber + Stern)
+-- Classification -> decoration (elite gold, boss winged, rare silver + star)
 local function BlizzClass(row, unit)
 	local okc, cls = pcall(UnitClassification, unit)
 	if not (okc and F.Readable(cls)) then cls = nil end
@@ -410,13 +410,13 @@ end
 local function CreateRow(index)
 	local row = CreateFrame("Button", "FrayEnemyRow" .. index, M.frame)
 	row:SetSize(ROW_W, ROW_H)
-	-- feste Position (die Zeilen bewegen sich nie; Zusammenruecken = erste n Zeilen zeigen)
-	row:SetPoint("TOPLEFT", M.frame, "TOPLEFT", 0, -(index - 1) * PITCH)  -- endgueltige Lage: M:ApplyLayout()
+	-- fixed position (rows never move; closing up = show the first n rows)
+	row:SetPoint("TOPLEFT", M.frame, "TOPLEFT", 0, -(index - 1) * PITCH)  -- final position: M:ApplyLayout()
 
-	-- eine gemeinsame Platte (dunkles Braun + Bronzerahmen), wie ein Unitframe
-	row.band = F.CreateBand(row, PLATE_X, PLATE_Y, ROW_W - PLATE_X, PLATE_H, 40)   -- Halo blendet links unter dem Schild ein
+	-- one shared plate (dark brown + bronze frame), like a unit frame
+	row.band = F.CreateBand(row, PLATE_X, PLATE_Y, ROW_W - PLATE_X, PLATE_H, 40)   -- halo fades in on the left under the shield
 	function row:SetBorderColor(cr, cg, cb) self.band:SetBorderColor(cr, cg, cb) end
-	local barW = ROW_W - BAR_X - EDGE   -- bis in die Rundung der Platte
+	local barW = ROW_W - BAR_X - EDGE   -- up to the rounding of the plate
 	local lvl = row.band.frame:GetFrameLevel() + 1
 
 	row.hp = F.CreateSlimBar(row, barW, HP_H, "top")
@@ -424,7 +424,7 @@ local function CreateRow(index)
 	row.hp:SetStatusBarColor(0.82, 0.27, 0.23)
 	row.hp:SetFrameLevel(lvl)
 
-	-- feine Trennlinie zwischen den Balken
+	-- fine divider between the bars
 	row.divider = row.band.frame:CreateTexture(nil, "ARTWORK", nil, 2)
 	row.divider:SetTexture(F.WHITE)
 	row.divider:SetVertexColor(0, 0, 0, 0.8)
@@ -438,7 +438,7 @@ local function CreateRow(index)
 	row.cast:SetFrameLevel(lvl)
 	row.cast:Hide()
 
-	-- Ressourcenbalken (Mana, Wut, Energie ...): nur wenn der Gegner einen hat
+	-- Resource bar (mana, rage, energy ...): only if the enemy has one
 	row.power = F.CreateSlimBar(row, barW, CAST_H, "bottom")
 	row.power:SetPoint("TOPLEFT", row, "TOPLEFT", BAR_X, -(PLATE_Y + EDGE + HP_H + 1))
 	row.power:SetStatusBarColor(0.25, 0.45, 0.9)
@@ -446,7 +446,7 @@ local function CreateRow(index)
 	row.power:SetFrameLevel(lvl)
 	row.power:Hide()
 
-	-- Texte ueber Balken und Rahmen
+	-- Texts above bars and frame
 	row.over = CreateFrame("Frame", nil, row)
 	row.over:SetAllPoints()
 	row.over:SetFrameLevel(lvl + 5)
@@ -458,7 +458,7 @@ local function CreateRow(index)
 	row.info:SetPoint("RIGHT", row, "TOPRIGHT", -PADX, -(PLATE_Y + EDGE + HP_H / 2))
 	row.info:SetSize(90, 12)
 
-	-- Wappenschild als eigener Frame ganz oben (sonst ueberdecken Platte und Rahmen es)
+	-- Crest shield as its own frame on top (otherwise plate and frame would cover it)
 	row.emblem = CreateFrame("Frame", nil, row)
 	row.emblem:SetPoint("CENTER", row, "TOPLEFT", ORB_CX, ORB_CY)
 	row.emblem:SetSize(ORB, ORB)
@@ -466,7 +466,7 @@ local function CreateRow(index)
 	row.orb = row.emblem:CreateTexture(nil, "ARTWORK")
 	row.orb:SetAllPoints()
 	row.orb:SetTexture(F.TEXROOT .. "Shield-Red.tga")
-	row.orbFrame = row.emblem:CreateTexture(nil, "ARTWORK", nil, 1)   -- Metallrahmen in der Rahmenfarbe
+	row.orbFrame = row.emblem:CreateTexture(nil, "ARTWORK", nil, 1)   -- metal frame in the frame colour
 	row.orbFrame:SetAllPoints()
 	row.orbFrame:SetTexture(F.TEXROOT .. "Shield-Frame.tga")
 	F.TintRim(row.orbFrame)
@@ -476,7 +476,7 @@ local function CreateRow(index)
 	row.mark:SetTexture("Interface/TargetingFrame/UI-RaidTargetingIcons")
 	row.mark:Hide()
 
-	-- Abzeichen unten links (nur Klassikoptik)
+	-- Badge at the bottom left (classic look only)
 	row.badge = CreateFrame("Frame", nil, row)
 	row.badge:SetSize(20, 20)
 	row.badge:SetPoint("CENTER", row.emblem, "BOTTOMLEFT", 18, 20)
@@ -490,13 +490,13 @@ local function CreateRow(index)
 	row.letter:SetTextColor(unpack(F.PAL.gold))
 	row.letter:SetSize(20, 20)
 	row.letter:SetJustifyV("MIDDLE")
-	row.letter:SetPoint("CENTER", row.badge, "CENTER", 1, -1)   -- Versalien sitzen im Zeilenkasten etwas hoch
+	row.letter:SetPoint("CENTER", row.badge, "CENTER", 1, -1)   -- capital letters sit a little high in the line box
 
 	row:Hide()
 	return row
 end
 
--- split = true: Lebensbalken oben + Streifen darunter (Ressource/Cast); false: Lebensbalken fuellt alles
+-- split = true: health bar on top + strip below (resource/cast); false: health bar fills everything
 local function SetSplit(row, split)
 	split = split and true or false
 	if row.blizz then return BlizzLayout(row, "normal") end
@@ -508,7 +508,7 @@ local function SetSplit(row, split)
 	row.hp:SetStatusBarTexture(tex)
 	row.hp.bg:SetTexture(tex)
 	row.hp.bg:SetVertexColor(0, 0, 0, 0.3)
-	row.hp:SetStatusBarColor(0.82, 0.27, 0.23)   -- neue Textur: Farbe neu setzen
+	row.hp:SetStatusBarColor(0.82, 0.27, 0.23)   -- new texture: set the colour again
 	F.AtlasBar(row.hp, "hpFill", split and "BarTop.tga" or "BarFull.tga")
 	row.divider:SetShown(split)
 	local y = -(PLATE_Y + EDGE + h / 2)
@@ -516,7 +516,7 @@ local function SetSplit(row, split)
 	row.info:SetPoint("RIGHT", row, "TOPRIGHT", -PADX, y)
 end
 
--- Ressourcenbalken des Gegners; true wenn einer sichtbar ist. Unlesbare Maximalwerte gelten als "keine".
+-- Resource bar of the enemy; true if one is visible. Unreadable maximum values count as "none".
 local function UpdatePower(row, unit)
 	local max = UnitPowerMax and UnitPowerMax(unit)
 	if not F.Readable(max) or not max or max <= 0 then
@@ -538,13 +538,10 @@ local function UpdatePower(row, unit)
 	return true
 end
 
--- Auswahl wie bei der Blizzard-Namensplakette: kraeftige gelbe Kontur HINTER dem Frame, nur um den AEUSSEREN Rand
--- (Rinnenkoerper als Rechteck + Portraitring als Kreis, je 2.6 px groesser). Eine dunkle Flaeche in Groesse des
--- Rinnenkoerpers verhindert, dass das Gelb durch die Rinnen scheint.
--- Auswahl wie bei der Blizzard-Namensplakette: eine gelbe Kontur, die der Form des Frames folgt (Rinnen, Ecken,
--- Portraitring, Verzierung). Sie entsteht aus versetzten Kopien der Rahmenkunst (entsaettigt, gelb eingefaerbt) HINTER
--- dem Frame; nur der Rand ragt heraus. Eine dunkle Flaeche in Groesse des Rinnenkoerpers verhindert, dass das Gelb
--- durch die (teilweise durchsichtigen) Rinnen scheint.
+-- Selection like the Blizzard nameplate: a yellow outline that follows the shape of the frame (troughs, corners,
+-- portrait ring, decoration). It is made of offset copies of the frame art (desaturated, tinted yellow) BEHIND
+-- the frame; only the edge sticks out. A dark area the size of the trough body keeps the yellow from shining
+-- through the (partly transparent) troughs.
 local OUTLINE_R = 2.6
 local function EnsureOutline(row)
 	if row.outline then return end
@@ -566,12 +563,12 @@ local function EnsureOutline(row)
 			end
 		end
 	end
-	-- minimaler Schein: zwei weitere, sehr schwache Lagen weiter aussen (halbtransparent, additiv)
+	-- minimal glow: two more, very faint layers further out (semi-transparent, additive)
 	for _, ring in ipairs({ { 4.6, 0.17 }, { 6.6, 0.08 } }) do
 		for dx = -1, 1 do
 			for dy = -1, 1 do
 				if dx ~= 0 or dy ~= 0 then
-					local k = (dx ~= 0 and dy ~= 0) and 0.72 or 1   -- Diagonalen etwas naeher, damit der Schein rund bleibt
+					local k = (dx ~= 0 and dy ~= 0) and 0.72 or 1   -- diagonals a bit closer so the glow stays round
 					local t = NewAtlasTex(row, "BACKGROUND", -1, "tFrame")
 					if t then
 						t:SetPoint("CENTER", row, "CENTER", dx * ring[1] * k, dy * ring[1] * k)
@@ -595,7 +592,7 @@ local function SetSelected(row, on)
 			local ok, err = pcall(EnsureOutline, row)
 			if not ok and not M.outlineErr then
 				M.outlineErr = true
-				F.Print("Kontur-Fehler: " .. tostring(err))
+				F.Print("Outline error: " .. tostring(err))
 			end
 		end
 		if row.outline then
@@ -645,7 +642,7 @@ end
 
 local function SetName(row, name)
 	if name == nil then name = "?" end
-	row.name:SetFormattedText("%s", name)      -- auch fuer geheime Namen
+	row.name:SetFormattedText("%s", name)      -- also for secret names
 end
 
 local function FillCached(row, e, pos)
@@ -660,7 +657,7 @@ local function FillCached(row, e, pos)
 	row.power:Hide()
 	SetSplit(row, false)
 	if row.blizz then BlizzStatic(row) end
-	row.info:SetText("ausser Sicht")
+	row.info:SetText("out of sight")
 	row.info:SetTextColor(0.7, 0.7, 0.7)
 	SetStatus(row, "orange", true)
 	SetMark(row, c.mark)
@@ -668,8 +665,8 @@ local function FillCached(row, e, pos)
 	row:SetBorderColor(0.5, 0.47, 0.45)
 end
 
--- Cast des Gegners: Zaubername als Text, Fortschritt ueber das Dauer-Objekt des Clients (auch bei
--- geheimen Zeiten). Alte Clients ohne UnitCastingDuration: Zeit aus den Zeitstempeln.
+-- Cast of the enemy: spell name as text, progress via the client's duration object (also with
+-- secret times). Old clients without UnitCastingDuration: time from the timestamps.
 local function UpdateCast(row, unit)
 	local n = select("#", UnitCastingInfo(unit))
 	local channel = false
@@ -748,12 +745,12 @@ local function FillRow(row, e, pos)
 	end
 end
 
--- Testmodus (/fray test): Platzhalter-Gegner statt echter Einheiten.
+-- Test mode (/fray test): placeholder enemies instead of real units.
 local DEMO_ENEMIES = {
-	{ name = "Aggro-Eber", status = "red", frac = 0.79, mark = 8, selected = true, elite = true },
-	{ name = "Wachhund", status = "orange", frac = 0.46, cast = "Schattenblitz", castLen = 3 },
-	{ name = "Plagueknecht", status = "orange", frac = 0.91, mark = 1, power = 0.65 },
-	{ name = "Schlafender Wolf", status = "green", frac = 1.0 },
+	{ name = "Aggro Boar", status = "red", frac = 0.79, mark = 8, selected = true, elite = true },
+	{ name = "Guard Dog", status = "orange", frac = 0.46, cast = "Shadow Bolt", castLen = 3 },
+	{ name = "Plague Servant", status = "orange", frac = 0.91, mark = 1, power = 0.65 },
+	{ name = "Sleeping Wolf", status = "green", frac = 1.0 },
 }
 
 local function DemoActive()
@@ -813,7 +810,7 @@ local function FillDemo(row, d, pos)
 	end
 end
 
-local cacheTok = {}   -- Plakette -> zuletzt bekannte Werte (fuer "ausser Sicht")
+local cacheTok = {}   -- nameplate -> last known values (for "out of sight")
 local CACHE_SECS = 20
 
 local STATUS_SCORE = { red = 100, orange = 60, green = 10 }
@@ -825,7 +822,7 @@ local function Entry(unit, token)
 	local status = ThreatStatus(unit, tanking, pct, guid, known)
 	local nm = UnitName(unit)
 	if not F.Readable(nm) then nm = "" end
-	-- Sortierwert: echter Threat, sonst grob aus dem Status
+	-- Sort value: real threat, otherwise roughly from the status
 	local score = (known and pct) or STATUS_SCORE[status] or 0
 	return { unit = unit, name = nm, tanking = tanking, pct = pct or 0, score = score, guid = guid, status = status,
 		token = token, idle = not F.IsEngaged(unit, true) }
@@ -840,7 +837,7 @@ local function TokenEntry(k)
 			pct = e.pct, score = e.score, seen = GetTime() }
 		return e
 	end
-	-- Plakette weg (Gegner ausser Sicht): nur mit Kampflog moeglich zu erkennen, ob er noch kaempft
+	-- Nameplate gone (enemy out of sight): only with a combat log can we tell whether it is still fighting
 	local c = cacheTok[k]
 	if c then
 		local alive = F.HasCombatLog and not F.Bool(UnitExists(unit)) and F.recent[c.guid]
@@ -858,17 +855,17 @@ local function SortEntries(list)
 	local byName = F.db.enemy.sort == "name"
 	table.sort(list, function(a, b)
 		local ai, bi = a.idle and true or false, b.idle and true or false
-		if ai ~= bi then return bi end -- nicht kaempfende Gegner ans Ende
+		if ai ~= bi then return bi end -- non-fighting enemies to the end
 		if byName and tostring(a.name or "") ~= tostring(b.name or "") then return tostring(a.name or "") < tostring(b.name or "") end
 		if a.score ~= b.score then
-			if tank then return a.score < b.score end -- Tank: gefaehrdete Gegner (wenig Threat) zuerst
-			return a.score > b.score                  -- sonst: hoechster Threat zuerst
+			if tank then return a.score < b.score end -- Tank: endangered enemies (little threat) first
+			return a.score > b.score                  -- otherwise: highest threat first
 		end
 		return tostring(a.guid) < tostring(b.guid)
 	end)
 end
 
--- Gegner ohne Plakette (Ziel, Fokus, Gruppenziele) ohne Doppelungen zu den Plaketten-Eintraegen.
+-- Enemies without a nameplate (target, focus, group targets) without duplicates of the nameplate entries.
 local function ExtraEntries(seen)
 	local list = {}
 	local units = { "target", "focus", "party1target", "party2target", "party3target", "party4target" }
@@ -884,7 +881,7 @@ local function ExtraEntries(seen)
 	return list
 end
 
--- Anzeige-Optionen pro Zeile (Prozent, Raidmarker, Elite-Symbol, Aggro-Schild, Ressource)
+-- Display options per row (percent, raid marker, elite icon, aggro shield, resource)
 local function ApplyRowOptions(row)
 	local o = F.db.enemy
 	if row.info then row.info:SetShown(o.showPercent ~= false) end
@@ -938,7 +935,7 @@ function M:Update()
 	end
 end
 
--- Spalten-Layout (Gegner pro Spalte einstellbar)
+-- Column layout (enemies per column is configurable)
 function M:ApplyLayout()
 	local pc = PerCol()
 	for i, row in ipairs(rows) do
@@ -953,7 +950,7 @@ function M:Init()
 	local f = CreateFrame("Frame", "FrayEnemyList", UIParent)
 	f:SetSize(ROW_W, PITCH)
 	M.frame = f
-	F:MakeMovable(f, "enemy", "Gegnerliste", 500, 80)
+	F:MakeMovable(f, "enemy", "Enemy list", 500, 80)
 
 	for i = 1, MAX_ROWS do rows[i] = (BLIZZ and CreateRowBlizz or CreateRow)(i) end
 	M:ApplyLayout()
@@ -967,7 +964,7 @@ function M:Init()
 	end)
 
 	if GetCVar and GetCVar("nameplateShowEnemies") == "0" then
-		F.Print("Gegner-Namensplaketten sind aus - die Gegnerliste braucht sie. /fray plates aktiviert sie.")
+		F.Print("Enemy nameplates are off - the enemy list needs them. /fray plates enables them.")
 	end
 end
 
@@ -988,6 +985,6 @@ function M:Debug()
 	for _, e in ipairs(ExtraEntries(seen)) do list[#list + 1] = e end
 	SortEntries(list)
 	for i, e in ipairs(list) do
-		print(i, e.unit and UnitName(e.unit) or (e.cache and e.cache.name), e.status, e.unit or "ausser Sicht")
+		print(i, e.unit and UnitName(e.unit) or (e.cache and e.cache.name), e.status, e.unit or "out of sight")
 	end
 end

@@ -31,8 +31,6 @@ the game's own target frame. It re-sorts live, closes gaps when an enemy dies an
 
 ### More
 - Target and focus **cast bars** using Blizzard's casting bar art.
-- A **cooldown bar** for spells, items and equipment slots.
-- Quality of life: auto-sell grey items, auto-repair.
 - A settings window styled like the game menu, a frame mover with grid and live coordinates, global and per-element scale,
   frame colour presets (copper, silver, gold) and a test mode.
 
@@ -58,11 +56,10 @@ Type `/fray` to open the settings window.
 | `/fray unlock` / `lock` | Move the frames (drag the blue overlays; hold Alt for free placement) |
 | `/fray grid [on\|off\|<px>]` | Toggle the snap grid |
 | `/fray reset` | Reset all frame positions |
-| `/fray toggle <module>` | Enable or disable a module (`enemy`, `cast`, `alerts`, `float`, `cooldowns`, `qol`) |
+| `/fray toggle <module>` | Enable or disable a module (`enemy`, `cast`, `alerts`) |
 | `/fray tank` | Tank mode |
 | `/fray all` | Show all hostile units, not only those in combat |
 | `/fray plates` | Enable enemy nameplates |
-| `/fray cd add\|remove\|list\|clear <spell \| id \| slot:13 \| item:id>` | Manage the cooldown bar |
 | `/fray test` | Show placeholder frames and a test alert |
 | `/fray probe` | Print what the client exposes to addons (for bug reports) |
 
@@ -72,8 +69,6 @@ Type `/fray` to open the settings window.
   combat, so the frames are display only.
 - **Secret values.** In combat the client hides some values (e.g. threat numbers on nameplates). Fray only uses what is
   readable; where threat is hidden it falls back to "is this enemy targeting you".
-- **No floating combat text** on clients without a combat log for addons (including Forever).
-- The in-game user interface is currently **German**; an English translation is planned.
 - The Blizzard art is loaded from the game client by name. If your client does not have an atlas, Fray falls back to its
   own textures. Fonts always come from the client.
 

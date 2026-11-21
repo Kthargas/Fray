@@ -1,6 +1,6 @@
 ## Interface: 16001, 20506, 20505
 ## Title: Fray
-## Notes: Live enemy list with threat, aggro alerts, target and focus cast bars and a cooldown bar. Built from Blizzard's own unit frame art.
+## Notes: Live enemy list with threat, aggro alerts, target and focus cast bars. Built from Blizzard's own unit frame art.
 ## Author: Kthargas
 ## Version: 1.0.0
 ## IconTexture: Interface\AddOns\Fray\Textures\Icon
@@ -12,7 +12,4 @@ Core.lua
 EnemyList.lua
 CastBar.lua
 Alerts.lua
-FloatText.lua
-Cooldowns.lua
-QoL.lua
 Options.lua

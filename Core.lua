@@ -25,29 +25,29 @@ F.FONT_TITLE = GameFont("QuestTitleFont", F.FONT)
 
 -- Copper palette (matches the Forever interface)
 F.PAL = {
-	edge = { 0.58, 0.46, 0.30 },     -- Bronze (Fenster, Symbole)
-	rim = { 0.82, 0.76, 0.72 },      -- heller Plattenrand wie bei Namensplaketten
-	hover = { 0.92, 0.74, 0.50 },    -- Rahmen unter der Maus / gewaehlt
-	gold = { 0.88, 0.74, 0.50 },     -- Titel, Hervorhebungen
+	edge = { 0.58, 0.46, 0.30 },     -- bronze (window, icons)
+	rim = { 0.82, 0.76, 0.72 },      -- light plate edge like nameplates
+	hover = { 0.92, 0.74, 0.50 },    -- frame under the mouse / selected
+	gold = { 0.88, 0.74, 0.50 },     -- titles, highlights
 	text = { 0.92, 0.90, 0.85 },
 	dim = { 0.72, 0.70, 0.66 },
-	bg = { 0.09, 0.065, 0.04 },      -- dunkles Braun
+	bg = { 0.09, 0.065, 0.04 },      -- dark brown
 	bgLight = { 0.24, 0.17, 0.10 },
 }
-F.BAR_TEX = F.TEXROOT .. "Pill.tga"             -- abgerundeter Balken (grau-weiss, wird eingefaerbt)
+F.BAR_TEX = F.TEXROOT .. "Pill.tga"             -- rounded bar (grey-white, gets tinted)
 F.PANEL_BORDER = { 0.55, 0.42, 0.24, 1 }
 
--- Rahmenfarbe der Platten (Option): die Metalltextur ist grau und wird eingefaerbt
+-- Frame colour of the plates (option): the metal texture is grey and gets tinted
 F.RIM = {
-	bronze = { name = "Kupfer (Forever)", c = { 0.88, 0.70, 0.48 } },
-	silver = { name = "Silber", c = { 0.86, 0.82, 0.78 } },
+	bronze = { name = "Copper (Forever)", c = { 0.88, 0.70, 0.48 } },
+	silver = { name = "Silver", c = { 0.86, 0.82, 0.78 } },
 	gold = { name = "Gold", c = { 1.0, 0.84, 0.34 } },
 }
 F.RIM_ORDER = { "bronze", "silver", "gold" }
 
--- Blizzard-Atlanten: pro Zweck eine Kandidatenliste, der erste Name, den der Client kennt, wird benutzt.
--- Ohne Treffer bleiben die eigenen Texturen. Die Namen sind Retail-/Dragonflight-Namen; ob Forever sie kennt,
--- zeigt /fray atlas.
+-- Blizzard atlases: one candidate list per purpose, the first name the client knows is used.
+-- Without a match our own textures stay. The names are retail / Dragonflight names; whether Forever knows them
+-- is shown by /fray atlas.
 F.ATLAS = {
 	hpFill = { "UI-HUD-UnitFrame-Target-PortraitOn-Bar-Health", "UI-HUD-UnitFrame-Target-PortraitOn-Bar-Health-Texture",
 		"UI-HUD-UnitFrame-Player-PortraitOn-Bar-Health", "UI-HUD-UnitFrame-Player-PortraitOn-Bar-Health-Texture" },
@@ -56,7 +56,7 @@ F.ATLAS = {
 	castFill = { "UI-CastingBar-Filling-Standard", "ui-castingbar-filling-standard" },
 	castChannel = { "UI-CastingBar-Filling-Channel", "ui-castingbar-filling-channel" },
 	castSpark = { "UI-CastingBar-Pip", "ui-castingbar-pip", "UI-CastingBar-Spark" },
-	-- Blizzards Ziel-Frame (Dragonflight): Rahmen, Leuchten im Kampf, Typ-Leiste, Balken, Masken, Verzierungen
+	-- Blizzard's target frame (Dragonflight): frame, combat glow, type bar, bars, masks, decorations
 	tFrame = { "UI-HUD-UnitFrame-Target-PortraitOn" },
 	tRareFrame = { "UI-HUD-UnitFrame-Target-Rare-PortraitOn" },
 	tFlash = { "UI-HUD-UnitFrame-Target-PortraitOn-InCombat" },
@@ -77,41 +77,41 @@ F.ATLAS = {
 	tRareDeco = { "ui-hud-unitframe-target-portraiton-boss-rare-silver" },
 	tStar = { "UnitFrame-Target-PortraitOn-Boss-Rare-Star", "UI-HUD-UnitFrame-Target-PortraitOn-Boss-Rare-Star" },
 	tCircle = { "UI-HUD-UnitFrame-SmallCircle" },
-	-- kleine Drachen-Symbole der Namensplaketten (Elite gold, seltener Elite silber)
+	-- small dragon icons of the nameplates (elite gold, rare elite silver)
 	eliteGold = { "nameplates-icon-elite-gold", "Nameplates-Icon-Elite-Gold", "nameplates-icon-elite-boss" },
 	eliteSilver = { "nameplates-icon-elite-silver", "Nameplates-Icon-Elite-Silver" },
-	-- Zauberleiste (Namen aus Blizzards Ziel-Zauberleiste)
+	-- Cast bar (names from Blizzard's target cast bar)
 	castFrame = { "UI-CastingBar-Frame" },
 	castBack = { "UI-CastingBar-Background" },
 	castShield = { "UI-CastingBar-Shield" },
-	-- Fensterrahmen (Blizzards Metall-Rahmen, Layout ButtonFrameTemplateNoPortrait)
+	-- Window frame (Blizzard's metal frame, layout ButtonFrameTemplateNoPortrait)
 	metalTL = { "UI-Frame-Metal-CornerTopLeft" }, metalTR = { "UI-Frame-Metal-CornerTopRight" },
 	metalBL = { "UI-Frame-Metal-CornerBottomLeft" }, metalBR = { "UI-Frame-Metal-CornerBottomRight" },
 	metalTop = { "_UI-Frame-Metal-EdgeTop" }, metalBottom = { "_UI-Frame-Metal-EdgeBottom" },
 	metalLeft = { "!UI-Frame-Metal-EdgeLeft" }, metalRight = { "!UI-Frame-Metal-EdgeRight" },
-	-- Tooltip-Rahmen (Layout TooltipDefaultLayout) fuer die Warnungen
+	-- Tooltip frame (layout TooltipDefaultLayout)
 	ttTL = { "Tooltip-NineSlice-CornerTopLeft" }, ttTR = { "Tooltip-NineSlice-CornerTopRight" },
 	ttBL = { "Tooltip-NineSlice-CornerBottomLeft" }, ttBR = { "Tooltip-NineSlice-CornerBottomRight" },
 	ttT = { "_Tooltip-NineSlice-EdgeTop" }, ttB = { "_Tooltip-NineSlice-EdgeBottom" },
 	ttL = { "!Tooltip-NineSlice-EdgeLeft" }, ttR = { "!Tooltip-NineSlice-EdgeRight" },
 	ttC = { "Tooltip-NineSlice-Center" },
-	-- schlichter Metall-Rahmen (SimplePanelTemplate): eine Ecke fuer alle vier (gespiegelt), eine Kante oben/unten,
-	-- eine Kante links/rechts
+	-- plain metal frame (SimplePanelTemplate): one corner for all four (mirrored), one edge top/bottom,
+	-- one edge left/right
 	smC = { "UI-Frame-SimpleMetal-CornerTopLeft" }, smT = { "_UI-Frame-SimpleMetal-EdgeTop" },
 	smL = { "!UI-Frame-SimpleMetal-EdgeLeft" },
-	-- Dialog-Rahmen des Spielmenues (Layout "Dialog"): Rautenecken, Kanten, Titelplakette
+	-- Dialog frame of the game menu (layout "Dialog"): diamond corners, edges, header plaque
 	dmTL = { "UI-Frame-DiamondMetal-CornerTopLeft" }, dmTR = { "UI-Frame-DiamondMetal-CornerTopRight" },
 	dmBL = { "UI-Frame-DiamondMetal-CornerBottomLeft" }, dmBR = { "UI-Frame-DiamondMetal-CornerBottomRight" },
 	dmT = { "_UI-Frame-DiamondMetal-EdgeTop" }, dmB = { "_UI-Frame-DiamondMetal-EdgeBottom" },
 	dmL = { "!UI-Frame-DiamondMetal-EdgeLeft" }, dmR = { "!UI-Frame-DiamondMetal-EdgeRight" },
 	dmHL = { "UI-Frame-DiamondMetal-Header-CornerLeft" }, dmHR = { "UI-Frame-DiamondMetal-Header-CornerRight" },
 	dmHC = { "_UI-Frame-DiamondMetal-Header-Tile" },
-	-- Bedienelemente
+	-- Controls
 	closeBtn = { "RedButton-Exit" },
 	cbBox = { "checkbox-minimal" }, cbCheck = { "checkmark-minimal" },
 	sliderL = { "Minimal_SliderBar_Left" }, sliderM = { "_Minimal_SliderBar_Middle" }, sliderR = { "Minimal_SliderBar_Right" },
 	sliderThumb = { "Minimal_SliderBar_Button" },
-	-- Aggro-Symbol im Kreis: Tank-Schild der Rollen-Symbole (Kandidatenliste, erster Treffer gewinnt)
+	-- Aggro indicator candidates: tank shield of the role icons (candidate list, first match wins)
 	aggroIcon = { "UI-LFG-RoleIcon-Tank", "groupfinder-icon-role-large-tank", "roleicon-tiny-tank", "UI-LFG-RoleIcon-Tank-Micro",
 		"GarrMission_RoleIcon-Tank", "Ping_Chat_Warning" },
 }
@@ -134,7 +134,7 @@ function F.AtlasName(key)
 	return nil
 end
 
--- Statusbar-Fuellung mit einem Atlas belegen; die Rundung der eigenen Balkenform kommt als Maske (wie bei Blizzard).
+-- Put an atlas on a status bar fill; the rounding of our own bar shape is applied as a mask (like Blizzard does).
 function F.AtlasBar(bar, key, shapeFile)
 	local name = F.AtlasName(key)
 	if not name then return false end
@@ -152,7 +152,7 @@ function F.AtlasBar(bar, key, shapeFile)
 	return true
 end
 
--- Name und Groesse eines Atlas (nil, wenn der Client ihn nicht kennt)
+-- Name and size of an atlas (nil if the client does not know it)
 function F.AtlasInfo(key)
 	local name = F.AtlasName(key)
 	if not name then return nil end
@@ -160,7 +160,7 @@ function F.AtlasInfo(key)
 	if ok and info then return name, info.width or 0, info.height or 0 end
 end
 
--- Leiste aus drei Teilen eines Atlas (Kappe links, Mitte gestreckt, Kappe rechts); capPx = Kappenbreite im Atlas
+-- Bar made of three parts of an atlas (left cap, stretched middle, right cap); capPx = cap width in the atlas
 function F.AtlasThreeSlice(parent, key, layer, sub, capPx)
 	local name, w, h = F.AtlasInfo(key)
 	if not name then return nil end
@@ -176,7 +176,7 @@ function F.AtlasThreeSlice(parent, key, layer, sub, capPx)
 	return t
 end
 
--- Position relativ zu TOPLEFT des Parents (x nach rechts, y nach unten)
+-- Position relative to the parent's TOPLEFT (x to the right, y downwards)
 function F.PlaceThreeSlice(t, parent, x, y, w, h)
 	local capw = t.capFrac * t.atlasW * (h / math.max(t.atlasH, 1))
 	t.L:ClearAllPoints(); t.L:SetPoint("TOPLEFT", parent, "TOPLEFT", x, -y); t.L:SetSize(capw, h)
@@ -186,8 +186,8 @@ function F.PlaceThreeSlice(t, parent, x, y, w, h)
 	t.M:SetPoint("BOTTOMRIGHT", t.R, "BOTTOMLEFT", 0, 0)
 end
 
--- Schlichter Metall-Rahmen aus Atlanten um "frame" (Ecken gespiegelt, Kanten gekachelt) + dunkle Flaeche.
--- Liefert false, wenn der Client die Atlanten nicht hat. Die Kunst sitzt genau auf den Rahmenecken (keine Versaetze).
+-- Plain metal frame from atlases around "frame" (corners mirrored, edges tiled) + dark fill.
+-- Returns false if the client lacks the atlases. The art sits exactly on the frame corners (no offsets).
 function F.AtlasFrame(frame, bg, inset)
 	if not (F.AtlasName("smC") and F.AtlasName("smT") and F.AtlasName("smL")) then return false end
 	local back = frame:CreateTexture(nil, "BACKGROUND")
@@ -212,9 +212,9 @@ function F.AtlasFrame(frame, bg, inset)
 	return true
 end
 
--- Rahmen wie das Spielmenue (Blizzards Dialog-Rahmen): Rautenecken, gekachelte Kanten, Dialog-Hintergrund und
--- eine Titelplakette, die ueber den oberen Rand ragt. Liefert die Plakette (Frame) oder nil, wenn der Client
--- die Atlanten nicht hat.
+-- Frame like the game menu (Blizzard's dialog frame): diamond corners, tiled edges, dialog background and
+-- a header plaque that overlaps the top edge. Returns the plaque (frame) or nil if the client
+-- lacks the atlases.
 function F.DialogFrame(frame, headerText)
 	for _, k in ipairs({ "dmTL", "dmTR", "dmBL", "dmBR", "dmT", "dmB", "dmL", "dmR", "dmHL", "dmHR", "dmHC" }) do
 		if not F.AtlasName(k) then return nil end
@@ -261,13 +261,13 @@ end
 
 function F.AtlasReport()
 	if not (C_Texture and C_Texture.GetAtlasInfo) then
-		F.Print("C_Texture.GetAtlasInfo fehlt in diesem Client - es werden die eigenen Texturen benutzt.")
+		F.Print("C_Texture.GetAtlasInfo is missing in this client - using the built-in textures.")
 		return
 	end
 	for _, key in ipairs({ "hpFill", "manaFill", "castFill", "castChannel", "castSpark", "tFrame", "tFlash", "tType", "tHealth",
 		"tHealthMask", "tMana", "mFrame", "tElite", "tBoss", "tRareDeco", "tStar", "tCircle", "eliteGold", "eliteSilver" }) do
 		local n = F.AtlasName(key)
-		F.Print(string.format("%s: %s", key, n and ("|cff55dd55" .. n .. "|r") or "|cffdd5555nicht vorhanden - eigene Textur|r"))
+		F.Print(string.format("%s: %s", key, n and ("|cff55dd55" .. n .. "|r") or "|cffdd5555not available - using built-in texture|r"))
 	end
 end
 F.bands = {}
@@ -276,7 +276,7 @@ function F.RimColor()
 	return s.c[1], s.c[2], s.c[3]
 end
 F.rimTex = {}
--- Textur (grauer Metallrahmen) in der Rahmenfarbe einfaerben und fuer spaetere Farbwechsel merken
+-- Tint a texture (grey metal frame) with the frame colour and remember it for later colour changes
 function F.TintRim(tex)
 	tex:SetVertexColor(F.RimColor())
 	F.rimTex[#F.rimTex + 1] = tex
@@ -288,17 +288,14 @@ function F.ApplyFrameStyle()
 	if m and m.Update then m:Update() end
 end
 
-local MODULE_NAMES = { "enemy", "cast", "alerts", "float", "cooldowns", "qol" }
+local MODULE_NAMES = { "enemy", "cast", "alerts" }
 
 local defaults = {
 	tank = false,
 	frameStyle = "bronze",
 	scale = 1,
 	scales = {},
-	modules = {
-		enemy = true, cast = true, alerts = true,
-		float = true, cooldowns = true, qol = true,
-	},
+	modules = { enemy = true, cast = true, alerts = true },
 	pos = {},
 	grid = { enabled = true, size = 10 },
 	enemy = { showAll = false, perCol = 6, threatOrange = 50, maxRows = 12, sort = "threat",
@@ -308,9 +305,6 @@ local defaults = {
 		tankWarn = true, threatHigh = true, threatPct = 90, onlyInGroup = true, onlyInCombat = true, pause = 8,
 		hold = 2.6, textSize = 24, showName = true,
 		soundGain = "raid", soundLoss = "alarm", soundThreat = "boss", soundLow = "alarm" },
-	float = { minAmount = 0 },
-	cooldowns = { list = {}, alwaysShow = true, size = 40, showTimer = true },
-	qol = { autoSell = true, autoRepair = true },
 }
 
 local function Merge(dst, src)
@@ -340,7 +334,7 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
 	end
 end)
 
--- Mehrere Handler pro Event; unbekannte Events (anderer Client-Build) werden ignoriert.
+-- Several handlers per event; unknown events (other client build) are ignored.
 function F:On(event, fn)
 	if not handlers[event] then
 		handlers[event] = {}
@@ -350,7 +344,7 @@ function F:On(event, fn)
 end
 
 ------------------------------------------------------------------------
--- Module
+-- Modules
 ------------------------------------------------------------------------
 function F:RegisterModule(name, mod)
 	mod.name = name
@@ -363,7 +357,7 @@ function F:IsEnabled(name)
 end
 
 ------------------------------------------------------------------------
--- Kleine UI-Helfer
+-- Small UI helpers
 ------------------------------------------------------------------------
 function F.Short(n)
 	n = n or 0
@@ -388,12 +382,12 @@ function F.CreateText(parent, size, justify, layer)
 	return fs
 end
 
--- Leuchtender Halo um ein Rechteck (9-Slice aus Glow.tga, additiv): wie die gelbe Auswahl bei Namensplaketten.
--- fadeLeft: Pixel, ueber die der Halo links aus dem Nichts einblendet (statt einer Kappe); so gibt es keine
--- harte Kante, wo links ein Emblem darueber liegt.
+-- Glowing halo around a rectangle (9-slice from Glow.tga, additive): like the yellow selection of nameplates.
+-- fadeLeft: pixels over which the halo fades in from nothing on the left (instead of a cap), so there is no
+-- hard edge where an emblem sits on top on the left.
 function F.CreateGlow(frame, fadeLeft)
 	local path = F.TEXROOT .. "Glow.tga"
-	local c, inset = 32, 22   -- Glow.tga: 96x96, Ecken 32 px, Eckenradius 8 wie die Platte
+	local c, inset = 32, 22   -- Glow.tga: 96x96, corners 32 px, corner radius 8 like the plate
 	local u = c / 96
 	local all, fades = {}, {}
 	local function tex(l, r, t, b)
@@ -432,7 +426,7 @@ function F.CreateGlow(frame, fadeLeft)
 	function glow:SetColor(r, g, b, a)
 		self.color = { r, g, b }
 		for _, x in ipairs(all) do x:SetVertexColor(r, g, b, a or 1) end
-		-- die Einblend-Stuecke: Verlauf von durchsichtig nach voll
+		-- the fade-in pieces: gradient from transparent to full
 		if CreateColor then
 			for _, x in ipairs(fades) do
 				pcall(x.SetGradient, x, "HORIZONTAL", CreateColor(r, g, b, 0), CreateColor(r, g, b, a or 1))
@@ -447,9 +441,9 @@ function F.CreateGlow(frame, fadeLeft)
 	return glow
 end
 
--- Abgerundete dunkle Braunplatte mit Bronzerahmen (3-Slice aus Plate-*.tga, 
--- angelehnt). Liegt bei (x0, -y0) mit Groesse w x h im Parent. SetBorderColor faerbt den Rahmen,
--- SetGlow zeigt Schimmer und Leucht-Halo (gewaehlt).
+-- Rounded dark brown plate with a bronze frame (3-slice from Plate-*.tga).
+-- Sits at (x0, -y0) with size w x h in the parent. SetBorderColor tints the frame,
+-- SetGlow shows shimmer and glow halo (selected).
 function F.CreateBand(parent, x0, y0, w, h, fadeLeft)
 	local band = {}
 	local holder = CreateFrame("Frame", nil, parent)
@@ -497,9 +491,9 @@ function F.CreateBand(parent, x0, y0, w, h, fadeLeft)
 	return band
 end
 
--- Balken: dunkler Hintergrund + bar texture (Farbe per SetStatusBarColor), duenne dunkle Kante.
--- style: nil = Pille (beidseitig rund); "top"/"bottom" = links gerade, rechts oben/unten abgerundet
--- (laeuft unter das Schild und sitzt buendig in den Ecken der Platte).
+-- Bar: dark background + bar texture (colour via SetStatusBarColor), thin dark edge.
+-- style: nil = pill (round at both ends); "top"/"bottom" = straight on the left, rounded top/bottom right
+-- (runs under the shield and sits flush in the corners of the plate).
 function F.CreateSlimBar(parent, w, h, style)
 	local tex = style == "top" and (F.TEXROOT .. "BarTop.tga") or style == "bottom" and (F.TEXROOT .. "BarBottom.tga")
 		or style == "right" and (F.TEXROOT .. "BarRight.tga") or style == "full" and (F.TEXROOT .. "BarFull.tga") or F.BAR_TEX
@@ -511,9 +505,9 @@ function F.CreateSlimBar(parent, w, h, style)
 	bar.bg = bar:CreateTexture(nil, "BACKGROUND")
 	bar.bg:SetAllPoints()
 	bar.bg:SetTexture(tex)
-	bar.bg:SetVertexColor(0, 0, 0, 0.3)   -- nur leicht abdunkeln: die Platte soll durchscheinen, keine harte Kante
-	-- Schlagschatten nach innen: Licht kommt von oben. Duenner, kraeftiger Streifen am oberen Rand (3 px),
-	-- nach unten ausblendend; rechts 3 px frei, damit er nicht in die runde Ecke ragt.
+	bar.bg:SetVertexColor(0, 0, 0, 0.3)   -- only darken slightly: the plate should show through, no hard edge
+	-- Inner drop shadow: light comes from above. Thin, strong strip at the top edge (3 px),
+	-- fading downwards; 3 px free on the right so it does not reach into the round corner.
 	bar.shade = bar:CreateTexture(nil, "OVERLAY", nil, 1)
 	bar.shade:SetTexture(F.WHITE)
 	bar.shade:SetPoint("TOPLEFT", bar, "TOPLEFT", 0, 0)
@@ -561,7 +555,7 @@ function F.ClassColor(unit)
 end
 
 ------------------------------------------------------------------------
--- Threat / Gegner
+-- Threat / enemies
 ------------------------------------------------------------------------
 function F.InGroup()
 	if IsInGroup then return IsInGroup() and true or false end
@@ -571,9 +565,9 @@ end
 local STATUS_PCT = { [0] = 20, [1] = 70, [2] = 95, [3] = 100 }
 
 ------------------------------------------------------------------------
--- Geheime Werte (Forever / neuere Clients): Viele Zahlen (HP, Threat ...) sind im Kampf "geheim".
--- Man darf sie nicht vergleichen, nicht rechnen und nicht formatieren, nur an Funktionen reichen,
--- die sie annehmen (StatusBar:SetValue, FontString:SetFormattedText).
+-- Secret values (Forever / newer clients): many numbers (health, threat ...) are "secret" in combat.
+-- They must not be compared, calculated with or formatted; they can only be passed to functions
+-- that accept them (StatusBar:SetValue, FontString:SetFormattedText).
 ------------------------------------------------------------------------
 function F.Readable(v)
 	if v == nil or not canaccessvalue then return true end
@@ -587,7 +581,7 @@ function F.AllReadable(...)
 	return true
 end
 
--- Gibt einen Wahrheitswert nur zurueck, wenn er lesbar ist (sonst false).
+-- Returns a boolean only if it is readable (otherwise false).
 function F.Bool(v)
 	return F.Readable(v) and v and true or false
 end
@@ -595,20 +589,20 @@ end
 F.HasCombatLog = CombatLogGetCurrentEventInfo ~= nil
 F.SCALE100 = CurveConstants and CurveConstants.ScaleTo100
 
--- Zielt die Einheit auf dich? (lesbar, auch im Kampf)
+-- Is the unit targeting you? (readable, also in combat)
 function F.TargetsMe(unit)
 	local tt = unit .. "target"
 	if not F.Bool(UnitExists(tt)) then return false end
 	return F.Bool(UnitIsUnit(tt, "player"))
 end
 
--- HP-Balken: SetValue/SetMinMaxValues nehmen auch geheime Werte an.
+-- Health bar: SetValue/SetMinMaxValues also accept secret values.
 function F.SetHealthBar(bar, unit)
 	bar:SetMinMaxValues(0, UnitHealthMax(unit))
 	bar:SetValue(UnitHealth(unit))
 end
 
--- HP in Prozent als Text: UnitHealthPercent (geheim moeglich) -> SetFormattedText; sonst Rechnung.
+-- Health as percent text: UnitHealthPercent (may be secret) -> SetFormattedText; otherwise calculated.
 function F.SetPercentText(fs, unit)
 	if UnitHealthPercent and F.SCALE100 then
 		fs:SetFormattedText("%.0f%%", UnitHealthPercent(unit, true, F.SCALE100))
@@ -622,8 +616,8 @@ function F.SetPercentText(fs, unit)
 	end
 end
 
--- Rueckgabe: tanking (bool), status (0-3, nil = unbekannt), pct (0-100, nil = unbekannt), known (bool:
--- Threat-Werte waren lesbar). Auf Plaketten ist Threat im Kampf geheim: dann gilt nur "zielt auf dich".
+-- Returns: tanking (bool), status (0-3, nil = unknown), pct (0-100, nil = unknown), known (bool:
+-- threat values were readable). On nameplates threat is secret in combat: then only "targets you" counts.
 function F.GetThreat(unit)
 	local tanking, status, pct
 	if UnitDetailedThreatSituation then
@@ -644,7 +638,7 @@ end
 
 local function IsFriendlyGroupUnit(tt)
 	if not F.Bool(UnitExists(tt)) or not F.Bool(UnitIsFriend("player", tt)) then return false end
-	-- nur du, deine Gruppe/dein Raid und deren Begleiter - keine fremden Spieler
+	-- only you, your group/raid and their companions - no foreign players
 	if F.Bool(UnitIsUnit(tt, "player")) or F.Bool(UnitInParty(tt)) or F.Bool(UnitInRaid(tt))
 		or F.Bool(UnitIsUnit(tt, "pet")) then
 		return true
@@ -655,8 +649,8 @@ local function IsFriendlyGroupUnit(tt)
 	return false
 end
 
--- Kampflog-Verfolgung (nur wo es ein Kampflog gibt): Wer zuletzt mit uns/der Gruppe Schaden/Zauber
--- getauscht hat, gilt 20 s als im Kampf - unabhaengig davon, ob er Ziel ist oder Threat liefert.
+-- Combat log tracking (only where a combat log exists): whoever last exchanged damage/spells
+-- with us/the group counts as in combat for 20 s - regardless of whether it is a target or gives threat.
 F.recent = {}
 local RECENT_SECS = 20
 if F.HasCombatLog then
@@ -677,7 +671,7 @@ if F.HasCombatLog then
 	end)
 end
 
--- Gegner, der gegen uns oder unsere Gruppe kaempft (oder alle feindlichen, wenn showAll).
+-- An enemy fighting us or our group (or all hostile ones if showAll).
 function F.IsEngaged(unit, strict)
 	if not F.Bool(UnitExists(unit)) then return false end
 	local dead = UnitIsDeadOrGhost(unit)
@@ -708,7 +702,7 @@ function F.EnumerateEnemies()
 			end
 		end
 	end
-	-- Unit-Tokens direkt abfragen (C_NamePlate.GetNamePlates liefert nicht in jedem Client brauchbare Daten).
+	-- Query unit tokens directly (C_NamePlate.GetNamePlates does not return usable data on every client).
 	for i = 1, 40 do add("nameplate" .. i) end
 	add("target")
 	add("focus")
@@ -717,10 +711,10 @@ function F.EnumerateEnemies()
 end
 
 ------------------------------------------------------------------------
--- Verschiebbare Frames
+-- Movable frames
 ------------------------------------------------------------------------
--- Skalierung: Gesamtfaktor mal Faktor des einzelnen Frames. Positionen sind in UIParent-Einheiten gespeichert
--- (Mitte des Frames), daher bleibt die Mitte beim Skalieren an Ort und Stelle.
+-- Scale: overall factor times the factor of the single frame. Positions are stored in UIParent units
+-- (centre of the frame), so the centre stays in place when scaling.
 function F.GetScale(key)
 	local s = (F.db.scale or 1) * ((F.db.scales and F.db.scales[key]) or 1)
 	return math.max(0.4, math.min(2.5, s))
@@ -736,15 +730,15 @@ local function Place(frame, m)
 	frame:SetPoint("CENTER", UIParent, "CENTER", x / s, y / s)
 end
 
--- Alle Einstellungen loeschen; beim naechsten Laden gelten wieder die Standardwerte
+-- Delete all settings; the defaults apply again on the next load
 function F.ResetAll()
-	if InCombatLockdown() then F.Print("Im Kampf nicht moeglich.") return end
+	if InCombatLockdown() then F.Print("Not possible in combat.") return end
 	for k in pairs(F.db) do F.db[k] = nil end
 	ReloadUI()
 end
 
 function F.ApplyScale()
-	if InCombatLockdown() then F.Print("Im Kampf nicht moeglich.") return end
+	if InCombatLockdown() then F.Print("Not possible in combat.") return end
 	for _, m in ipairs(F.movables) do
 		Place(m.frame, m)
 		local ov = m.overlay
@@ -778,7 +772,7 @@ local function CreateOverlay(m)
 	local fs = F.CreateText(ov, 12, "CENTER")
 	fs:SetPoint("CENTER", 0, 7)
 	fs:SetText(m.label)
-	-- Koordinaten: linke obere Ecke, Ursprung unten links (X nach rechts, Y nach oben)
+	-- Coordinates: top left corner, origin bottom left (X to the right, Y upwards)
 	local cs = F.CreateText(ov, 11, "CENTER")
 	cs:SetPoint("CENTER", 0, -7)
 	cs:SetTextColor(1, 0.82, 0.35)
@@ -805,7 +799,7 @@ local function CreateOverlay(m)
 		local y = d.y + (cy / es - d.cy)
 		local g = F.db.grid
 		if g.enabled and not IsAltKeyDown() then
-			-- linke obere Ecke auf das Raster legen (Alt gedrueckt halten = frei verschieben)
+			-- snap the top left corner to the grid (hold Alt = move freely)
 			local w, h = self:GetSize()
 			local size = g.size
 			local left = math.floor((x - w / 2) / size + 0.5) * size
@@ -827,7 +821,7 @@ local function CreateOverlay(m)
 	m.overlay = ov
 end
 
--- Raster beim Verschieben: duenne Linien im Abstand g.size, Mittellinien golden.
+-- Grid while moving: thin lines every g.size, centre lines golden.
 local gridFrame, gridLines = nil, {}
 
 function F:UpdateGrid()
@@ -871,7 +865,7 @@ end
 
 function F:SetLocked(locked)
 	if not locked and InCombatLockdown() then
-		F.Print("Im Kampf nicht moeglich.")
+		F.Print("Not possible in combat.")
 		return
 	end
 	F.unlocked = not locked
@@ -893,17 +887,17 @@ function F:SetLocked(locked)
 	end
 	F:UpdateGrid()
 	if F.unlocked then
-		F.Print("Frames entsperrt - per Drag verschieben" .. (F.db.grid.enabled and " (Raster aktiv, Alt = frei)" or "") .. ", danach /fray lock.")
+		F.Print("Frames unlocked - drag to move" .. (F.db.grid.enabled and " (grid on, hold Alt for free placement)" or "") .. ", then /fray lock.")
 	else
-		F.Print("Frames gesperrt.")
+		F.Print("Frames locked.")
 	end
 end
 
 function F:ResetPositions()
-	if InCombatLockdown() then F.Print("Im Kampf nicht moeglich.") return end
+	if InCombatLockdown() then F.Print("Not possible in combat.") return end
 	wipe(F.db.pos)
 	for _, m in ipairs(F.movables) do Place(m.frame, m) end
-	F.Print("Positionen zurueckgesetzt.")
+	F.Print("Positions reset.")
 end
 
 F:On("PLAYER_REGEN_DISABLED", function()
@@ -913,7 +907,7 @@ F:On("PLAYER_REGEN_DISABLED", function()
 		end
 		F.unlocked = false
 		F:UpdateGrid()
-		F.Print("Kampf: Frames wurden gesperrt.")
+		F.Print("Combat: frames were locked.")
 	end
 end)
 
@@ -935,21 +929,21 @@ boot:SetScript("OnEvent", function(_, event, arg1)
 				if m.Init then m:Init() end
 				if m.SetEnabled then m:SetEnabled(F:IsEnabled(name)) end
 			end)
-			if not ok then F.Print("Fehler in Modul '" .. name .. "': " .. tostring(err)) end
+			if not ok then F.Print("Error in module '" .. name .. "': " .. tostring(err)) end
 		end
 		F.ready = true
-		F.Print("v" .. F.version .. " geladen. /fray oeffnet die Einstellungen.")
+		F.Print("v" .. F.version .. " loaded. Type /fray for options.")
 	end
 end)
 
 
 ------------------------------------------------------------------------
--- Diagnose fuer andere Clients (z. B. Forever): zeigt, welche Funktionen es gibt und welche Werte der
--- Client "geheim" (Secret Value) macht. /fray probe - am besten einmal ohne und einmal im Kampf ausfuehren.
+-- Diagnostics for other clients (e.g. Forever): shows which functions exist and which values the
+-- client makes "secret". /fray probe - best run once out of combat and once in combat.
 ------------------------------------------------------------------------
 local function Val(v)
 	if v == nil then return "nil" end
-	if canaccessvalue and not canaccessvalue(v) then return "GEHEIM" end
+	if canaccessvalue and not canaccessvalue(v) then return "SECRET" end
 	if type(v) == "number" then return string.format("%.2f", v) end
 	return tostring(v)
 end
@@ -957,7 +951,7 @@ end
 function F.Probe()
 	local function line(...) print("  " .. string.format(...)) end
 	local ver, build, _, toc = GetBuildInfo()
-	F.Print(string.format("Probe: Version %s, Build %s, Interface %s, Kampf=%s, Gruppe=%s",
+	F.Print(string.format("Probe: version %s, build %s, interface %s, combat=%s, group=%s",
 		tostring(ver), tostring(build), tostring(toc), tostring(InCombatLockdown()), tostring(F.InGroup())))
 	local apis = {
 		"canaccessvalue", "issecretvalue", "UnitHealthPercent", "CurveConstants", "UnitCastingDuration",
@@ -965,60 +959,59 @@ function F.Probe()
 		"C_Timer", "C_Container", "C_Spell", "GetSpellCooldown", "SetPortraitTexture", "UnitGUID",
 	}
 	local have = {}
-	for _, n in ipairs(apis) do have[#have + 1] = n .. "=" .. (_G[n] ~= nil and "ja" or "NEIN") end
+	for _, n in ipairs(apis) do have[#have + 1] = n .. "=" .. (_G[n] ~= nil and "yes" or "NO") end
 	line("API: %s", table.concat(have, " "))
 	local units = { "player", "target", "nameplate1", "nameplate2", "nameplate3" }
 	for _, u in ipairs(units) do
 		if UnitExists(u) then
 			local function try(fn, ...)
-				if not fn then return "fehlt" end
+				if not fn then return "missing" end
 				local ok, a, b, c, d = pcall(fn, ...)
-				if not ok then return "FEHLER" end
+				if not ok then return "ERROR" end
 				if select("#", ...) >= 0 and (b ~= nil or c ~= nil or d ~= nil) then
 					return Val(a) .. "/" .. Val(b) .. "/" .. Val(c) .. "/" .. Val(d)
 				end
 				return Val(a)
 			end
-			line("%s: Name=%s HP=%s/%s GUID=%s Kampf=%s Feind=%s Ich=%s",
+			line("%s: name=%s hp=%s/%s guid=%s combat=%s enemy=%s me=%s",
 				u, try(UnitName, u), try(UnitHealth, u), try(UnitHealthMax, u), try(UnitGUID, u),
 				try(UnitAffectingCombat, u), try(UnitCanAttack, "player", u), try(UnitIsUnit, u, "player"))
 			if u ~= "player" then
-				line("   Threat(%s)=%s  Ziel-von=%s  Cast=%s  Raidmarker=%s",
+				line("   threat(%s)=%s  targeted-by=%s  cast=%s  raid marker=%s",
 					u, try(UnitDetailedThreatSituation, "player", u), try(UnitExists, u .. "target"),
 					try(UnitCastingInfo, u), try(GetRaidTargetIndex, u))
 				if UnitHealthPercent then
-					line("   HP-Prozent=%s", try(UnitHealthPercent, u, true, CurveConstants and CurveConstants.ScaleTo100))
+					line("   hp percent=%s", try(UnitHealthPercent, u, true, CurveConstants and CurveConstants.ScaleTo100))
 				end
 			end
 		end
 	end
 	if C_NamePlate and C_NamePlate.GetNamePlates then
 		local ok, plates = pcall(C_NamePlate.GetNamePlates)
-		line("Plakettenliste: %s", ok and tostring(#plates) or "FEHLER")
+		line("Nameplate list: %s", ok and tostring(#plates) or "ERROR")
 	end
-	F.Print("Probe Ende. Bitte den Chat-Text (auch ohne Kampf/mit Kampf) kopieren oder abfotografieren.")
+	F.Print("Probe done. Please copy the chat text (once out of combat and once in combat) for bug reports.")
 end
 
 ------------------------------------------------------------------------
--- Slash-Befehle
+-- Slash commands
 ------------------------------------------------------------------------
 local function ToggleOption(tbl, key, label)
 	tbl[key] = not tbl[key]
-	F.Print(label .. ": " .. (tbl[key] and "an" or "aus"))
+	F.Print(label .. ": " .. (tbl[key] and "on" or "off"))
 end
 
 local function Help()
-	F.Print("Befehle:")
-	print("  /fray unlock | lock       - Frames verschieben")
-	print("  /fray grid [on|off|<px>]  - Raster beim Verschieben (ohne Argument umschalten, Alt = frei)")
-	print("  /fray reset               - Positionen zuruecksetzen")
-	print("  /fray toggle <modul>      - Modul an/aus (" .. table.concat(MODULE_NAMES, ", ") .. ")")
-	print("  /fray tank                - Tank-Modus (Threat-Farben/Warnungen invertiert)")
-	print("  /fray all                 - Gegnerliste: alle feindlichen Einheiten statt nur Kampf")
-	print("  /fray plates              - Gegner-Namensplaketten aktivieren")
-	print("  /fray opt <name>          - Option umschalten: autosell, autorepair, lowhp, onlyhostile")
-	print("  /fray cd add|remove|list|clear <Zauber/ID | slot:13 | item:ID>")
-	print("  /fray test                - Testanzeige")
+	F.Print("Commands:")
+	print("  /fray unlock | lock       - Move frames")
+	print("  /fray grid [on|off|<px>]  - Snap grid while moving (no argument toggles, Alt = free)")
+	print("  /fray reset               - Reset positions")
+	print("  /fray toggle <module>     - Enable/disable a module (" .. table.concat(MODULE_NAMES, ", ") .. ")")
+	print("  /fray tank                - Tank mode (inverts threat colours and alerts)")
+	print("  /fray all                 - Enemy list: show all hostile units, not only those in combat")
+	print("  /fray plates              - Enable enemy nameplates")
+	print("  /fray opt <name>          - Toggle an option: lowhp, onlyhostile")
+	print("  /fray test                - Show test display")
 end
 
 SLASH_FRAY1 = "/fray"
@@ -1047,40 +1040,35 @@ SlashCmdList["FRAY"] = function(msg)
 		else
 			g.enabled = not g.enabled
 		end
-		F.Print("Raster: " .. (g.enabled and ("an, " .. g.size .. " px") or "aus"))
+		F.Print("Grid: " .. (g.enabled and ("on, " .. g.size .. " px") or "off"))
 		F:UpdateGrid()
 	elseif cmd == "reset" then
 		F:ResetPositions()
 	elseif cmd == "tank" then
-		ToggleOption(F.db, "tank", "Tank-Modus")
+		ToggleOption(F.db, "tank", "Tank mode")
 	elseif cmd == "all" then
-		ToggleOption(F.db.enemy, "showAll", "Alle feindlichen Einheiten anzeigen")
+		ToggleOption(F.db.enemy, "showAll", "Show all hostile units")
 	elseif cmd == "plates" then
-		if InCombatLockdown() then F.Print("Im Kampf nicht moeglich.") return end
+		if InCombatLockdown() then F.Print("Not possible in combat.") return end
 		SetCVar("nameplateShowEnemies", 1)
-		F.Print("Gegner-Namensplaketten aktiviert.")
+		F.Print("Enemy nameplates enabled.")
 	elseif cmd == "toggle" then
 		local name = rest:lower()
 		if F.db.modules[name] == nil then
-			F.Print("Unbekanntes Modul. Moeglich: " .. table.concat(MODULE_NAMES, ", "))
+			F.Print("Unknown module. Available: " .. table.concat(MODULE_NAMES, ", "))
 		elseif InCombatLockdown() then
-			F.Print("Im Kampf nicht moeglich.")
+			F.Print("Not possible in combat.")
 		else
 			F.db.modules[name] = not F.db.modules[name]
 			local m = F.modules[name]
 			if m and m.SetEnabled then m:SetEnabled(F.db.modules[name]) end
-			F.Print(name .. ": " .. (F.db.modules[name] and "an" or "aus"))
+			F.Print(name .. ": " .. (F.db.modules[name] and "on" or "off"))
 		end
 	elseif cmd == "opt" then
 		local o = rest:lower()
-		if o == "autosell" then ToggleOption(F.db.qol, "autoSell", "Muell automatisch verkaufen")
-		elseif o == "autorepair" then ToggleOption(F.db.qol, "autoRepair", "Automatisch reparieren")
-		elseif o == "lowhp" then ToggleOption(F.db.alerts, "lowHealth", "Warnung bei niedrigen HP")
-		elseif o == "onlyhostile" then ToggleOption(F.db.cast, "onlyHostile", "Cast-Bars nur fuer Gegner")
+		if o == "lowhp" then ToggleOption(F.db.alerts, "lowHealth", "Low health alert")
+		elseif o == "onlyhostile" then ToggleOption(F.db.cast, "onlyHostile", "Cast bars for enemies only")
 		else Help() end
-	elseif cmd == "cd" then
-		local m = F.modules.cooldowns
-		if m and m.Command then m:Command(rest) end
 	elseif cmd == "atlas" then
 		F.AtlasReport()
 	elseif cmd == "probe" then
@@ -1090,14 +1078,13 @@ SlashCmdList["FRAY"] = function(msg)
 		if m and m.Debug then m:Debug() end
 	elseif cmd == "test" then
 		if F.modules.alerts and F.modules.alerts.Alert then
-			F.modules.alerts:Alert("Aggro!", "%s", "red", "soundGain", "Testgegner")
+			F.modules.alerts:Alert("Aggro!", "%s", "red", "soundGain", "Test enemy")
 		end
-		if F.modules.float and F.modules.float.Test then F.modules.float:Test() end
 		for _, name in ipairs({ "enemy" }) do
 			local m = F.modules[name]
 			if m and m.StartDemo and F:IsEnabled(name) then m:StartDemo(20) end
 		end
-		F.Print("Testmodus: Platzhalter-Listen fuer 20 Sekunden.")
+		F.Print("Test mode: placeholder lists for 20 seconds.")
 	else
 		Help()
 	end

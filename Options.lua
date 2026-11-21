@@ -2,8 +2,8 @@ local ADDON, F = ...
 local M = {}
 F:RegisterModule("options", M)
 
--- Einstellungsfenster im Stil der Spieloberflaeche: dunkles Panel mit feinem Goldrand, Reiter links,
--- Inhalt rechts. Oeffnen mit /fray (oder /fray config).
+-- Settings window in the style of the game UI: dark panel with a fine gold edge, tabs on the left,
+-- content on the right. Open with /fray (or /fray config).
 local PW, PH = 620, 560
 local TABW = 150
 local PAD = 22
@@ -16,7 +16,7 @@ local panel
 local tabs, pages, widgets = {}, {}, {}
 
 ------------------------------------------------------------------------
--- Bausteine
+-- Building blocks
 ------------------------------------------------------------------------
 local function NineSlice(frame, file, c)
 	local path = F.TEXROOT .. file
@@ -30,7 +30,7 @@ local function NineSlice(frame, file, c)
 	local tl, tr = tex(0, u, 0, u), tex(1 - u, 1, 0, u)
 	local bl, br = tex(0, u, 1 - u, 1), tex(1 - u, 1, 1 - u, 1)
 	for _, x in ipairs({ tl, tr, bl, br }) do x:SetSize(c, c) end
-	-- Versaetze wie in Blizzards Layout ButtonFrameTemplateNoPortrait: die Kunst ragt ueber den Rahmen hinaus
+	-- Offsets as in Blizzard's layout ButtonFrameTemplateNoPortrait: the art reaches beyond the frame
 	tl:SetPoint("TOPLEFT", frame, "TOPLEFT", -8, 16)
 	tr:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 4, 16)
 	bl:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", -8, -3)
@@ -45,7 +45,7 @@ local function NineSlice(frame, file, c)
 	center:SetPoint("TOPLEFT", tl, "BOTTOMRIGHT"); center:SetPoint("BOTTOMRIGHT", br, "TOPLEFT")
 end
 
--- Blizzards Metall-Rahmen als Fensterrahmen (Atlas); false, wenn der Client sie nicht hat
+-- Blizzard's metal frame as the window frame (atlas); false if the client does not have it
 local function AtlasPanel(frame)
 	for _, k in ipairs({ "metalTL", "metalTR", "metalBL", "metalBR", "metalTop", "metalBottom", "metalLeft", "metalRight" }) do
 		if not F.AtlasName(k) then return false end
@@ -219,7 +219,7 @@ local function Slider(page, label, min, max, step, get, set, fmt)
 	return holder
 end
 
--- Groesse eines einzelnen Frames (Prozent); wirkt zusammen mit der Gesamtskalierung
+-- Size of a single frame (percent); works together with the overall scale
 local function ScaleSlider(page, label, key)
 	return Slider(page, label, 50, 200, 5,
 		function() return math.floor(((F.db.scales and F.db.scales[key]) or 1) * 100 + 0.5) end,
@@ -246,18 +246,18 @@ local function Button(page, text, fn, width)
 end
 
 ------------------------------------------------------------------------
--- Zugriff auf Einstellungen
+-- Access to settings
 ------------------------------------------------------------------------
 local function ModuleGet(name) return function() return F.db.modules[name] end end
 local function ModuleSet(name)
 	return function(v)
-		if InCombatLockdown() then F.Print("Im Kampf nicht moeglich.") return end
+		if InCombatLockdown() then F.Print("Not possible in combat.") return end
 		F.db.modules[name] = v
 		local m = F.modules[name]
 		if m and m.SetEnabled then m:SetEnabled(v) end
 	end
 end
--- Wert durchschalten (Klick = naechster Eintrag); values = { { key = ..., name = ... }, ... }
+-- Cycle a value (click = next entry); values = { { key = ..., name = ... }, ... }
 local function Cycle(page, label, get, set, values, onSet)
 	local b
 	local function nameOf()
@@ -277,7 +277,7 @@ local function Cycle(page, label, get, set, values, onSet)
 	return b
 end
 
--- Ton waehlen (Klick schaltet durch und spielt den Ton zur Probe)
+-- Pick a sound (click cycles and plays the sound as a preview)
 local function SoundCycle(page, label, optKey)
 	local A = F.modules.alerts
 	return Cycle(page, label, function() return F.db.alerts[optKey] end, function(v) F.db.alerts[optKey] = v end,
@@ -289,167 +289,133 @@ local function Opt(tbl, key)
 end
 
 ------------------------------------------------------------------------
--- Seiten
+-- Pages
 ------------------------------------------------------------------------
 local PAGES = {
-	{ "Allgemein", function(p)
-		Header(p, "Rolle")
-		Checkbox(p, "Tank-Modus (Threat-Farben und Warnungen fuer Tanks)", function() return F.db.tank end, function(v) F.db.tank = v end)
-		Header(p, "Darstellung")
-		Slider(p, "Gesamtgroesse aller Elemente", 50, 150, 5,
+	{ "General", function(p)
+		Header(p, "Role")
+		Checkbox(p, "Tank mode (threat colours and alerts for tanks)", function() return F.db.tank end, function(v) F.db.tank = v end)
+		Header(p, "Appearance")
+		Slider(p, "Overall size of all elements", 50, 150, 5,
 			function() return math.floor((F.db.scale or 1) * 100 + 0.5) end,
 			function(v) F.db.scale = v / 100; F.ApplyScale() end, function(v) return v .. " %" end)
 		local function styleName() return (F.RIM[F.db.frameStyle] or F.RIM.bronze).name end
 		local styleBtn
-		styleBtn = Button(p, "Rahmenfarbe: " .. styleName(), function(b)
+		styleBtn = Button(p, "Frame colour: " .. styleName(), function(b)
 			local cur = 1
 			for i, k in ipairs(F.RIM_ORDER) do if k == F.db.frameStyle then cur = i end end
 			F.db.frameStyle = F.RIM_ORDER[cur % #F.RIM_ORDER + 1]
-			b:SetLabel("Rahmenfarbe: " .. styleName())
+			b:SetLabel("Frame colour: " .. styleName())
 			F.ApplyFrameStyle()
 		end)
-		Header(p, "Frames anordnen")
+		Header(p, "Arrange frames")
 		local lock
-		lock = Button(p, "Frames entsperren", function(b)
+		lock = Button(p, "Unlock frames", function(b)
 			F:SetLocked(F.unlocked)
-			b:SetLabel(F.unlocked and "Frames sperren" or "Frames entsperren")
+			b:SetLabel(F.unlocked and "Lock frames" or "Unlock frames")
 		end)
-		Checkbox(p, "Raster beim Verschieben (Alt = frei)", function() return F.db.grid.enabled end,
+		Checkbox(p, "Snap to grid while moving (Alt = free)", function() return F.db.grid.enabled end,
 			function(v) F.db.grid.enabled = v; F:UpdateGrid() end)
-		Slider(p, "Rasterweite", 8, 60, 2, function() return F.db.grid.size end,
+		Slider(p, "Grid size", 8, 60, 2, function() return F.db.grid.size end,
 			function(v) F.db.grid.size = v; F:UpdateGrid() end, function(v) return v .. " px" end)
-		Button(p, "Positionen zuruecksetzen", function() F:ResetPositions() end)
-		Header(p, "Vorschau")
-		Button(p, "Testmodus (20 Sekunden)", function() SlashCmdList["FRAY"]("test") end)
-		Header(p, "Daten")
-		Button(p, "Alle Einstellungen zuruecksetzen", function(b)
+		Button(p, "Reset positions", function() F:ResetPositions() end)
+		Header(p, "Preview")
+		Button(p, "Test mode (20 seconds)", function() SlashCmdList["FRAY"]("test") end)
+		Header(p, "Data")
+		Button(p, "Reset all settings", function(b)
 			if not b.armed then
 				b.armed = true
-				b:SetLabel("Wirklich? Nochmal klicken")
+				b:SetLabel("Sure? Click again")
 				if C_Timer and C_Timer.After then
-					C_Timer.After(4, function() b.armed = false; b:SetLabel("Alle Einstellungen zuruecksetzen") end)
+					C_Timer.After(4, function() b.armed = false; b:SetLabel("Reset all settings") end)
 				end
 			else
 				F.ResetAll()
 			end
 		end, 260)
 	end },
-	{ "Gegnerliste", function(p)
-		Header(p, "Anzeige")
-		Checkbox(p, "Gegnerliste anzeigen", ModuleGet("enemy"), ModuleSet("enemy"))
-		Checkbox(p, "Alle feindlichen Gegner zeigen (auch ohne Kampf)", function() return F.db.enemy.showAll end,
+	{ "Enemy list", function(p)
+		Header(p, "Display")
+		Checkbox(p, "Show enemy list", ModuleGet("enemy"), ModuleSet("enemy"))
+		Checkbox(p, "Show all hostile enemies (even out of combat)", function() return F.db.enemy.showAll end,
 			function(v) F.db.enemy.showAll = v end)
-		ScaleSlider(p, "Groesse der Gegnerliste", "enemy")
-		Slider(p, "Gegner pro Spalte", 3, 9, 1, function() return F.db.enemy.perCol end,
+		ScaleSlider(p, "Enemy list size", "enemy")
+		Slider(p, "Enemies per column", 3, 9, 1, function() return F.db.enemy.perCol end,
 			function(v)
 				F.db.enemy.perCol = v
 				local m = F.modules.enemy
 				if m and m.ApplyLayout then m:ApplyLayout() end
 			end)
-		Slider(p, "Maximale Anzahl Gegner", 3, 18, 1, function() return F.db.enemy.maxRows end,
+		Slider(p, "Maximum number of enemies", 3, 18, 1, function() return F.db.enemy.maxRows end,
 			function(v) F.db.enemy.maxRows = v end)
-		Cycle(p, "Sortierung", function() return F.db.enemy.sort end, function(v) F.db.enemy.sort = v end,
-			{ { key = "threat", name = "nach Threat" }, { key = "name", name = "nach Name" } })
-		Header(p, "Angezeigte Elemente")
+		Cycle(p, "Sorting", function() return F.db.enemy.sort end, function(v) F.db.enemy.sort = v end,
+			{ { key = "threat", name = "by threat" }, { key = "name", name = "by name" } })
+		Header(p, "Shown elements")
 		local g, s
-		g, s = Opt("enemy", "showPercent"); Checkbox(p, "Lebensprozent", g, s)
-		g, s = Opt("enemy", "showPower"); Checkbox(p, "Ressourcen-Balken (Mana, Wut, Energie)", g, s)
-		g, s = Opt("enemy", "showMarker"); Checkbox(p, "Raidmarker", g, s)
-		g, s = Opt("enemy", "showElite"); Checkbox(p, "Elite-/Selten-Symbole", g, s)
-		g, s = Opt("enemy", "showShield"); Checkbox(p, "Aggro-Schild", g, s)
-		Header(p, "Aggro-Symbol")
-		Slider(p, "Orange ab Threat", 20, 90, 5, function() return F.db.enemy.threatOrange end,
+		g, s = Opt("enemy", "showPercent"); Checkbox(p, "Health percent", g, s)
+		g, s = Opt("enemy", "showPower"); Checkbox(p, "Resource bar (mana, rage, energy)", g, s)
+		g, s = Opt("enemy", "showMarker"); Checkbox(p, "Raid markers", g, s)
+		g, s = Opt("enemy", "showElite"); Checkbox(p, "Elite / rare icons", g, s)
+		g, s = Opt("enemy", "showShield"); Checkbox(p, "Aggro shield", g, s)
+		Header(p, "Aggro indicator")
+		Slider(p, "Orange from threat", 20, 90, 5, function() return F.db.enemy.threatOrange end,
 			function(v) F.db.enemy.threatOrange = v end, function(v) return v .. " %" end)
-		Hint(p, "Rot: Du hast die Aggro.   Orange: hoher Threat oder Aggro gerade verloren.   Gruen: kaum Threat.", 34)
+		Hint(p, "Red: you have aggro.   Orange: high threat or aggro just lost.   Green: little threat.", 34)
 	end },
-	{ "Zauberleiste", function(p)
-		Header(p, "Zauberleisten fuer Ziel und Fokus")
-		Checkbox(p, "Zauberleisten anzeigen", ModuleGet("cast"), ModuleSet("cast"))
-		ScaleSlider(p, "Groesse der Ziel-Zauberleiste", "castTarget")
-		ScaleSlider(p, "Groesse der Fokus-Zauberleiste", "castFocus")
+	{ "Cast bars", function(p)
+		Header(p, "Cast bars for target and focus")
+		Checkbox(p, "Show cast bars", ModuleGet("cast"), ModuleSet("cast"))
+		ScaleSlider(p, "Target cast bar size", "castTarget")
+		ScaleSlider(p, "Focus cast bar size", "castFocus")
 		local g, s = Opt("cast", "onlyHostile")
-		Checkbox(p, "Nur fuer Gegner", g, s)
-		Header(p, "Anzeige")
-		g, s = Opt("cast", "target"); Checkbox(p, "Zauberleiste fuer das Ziel", g, s)
-		g, s = Opt("cast", "focus"); Checkbox(p, "Zauberleiste fuer den Fokus", g, s)
-		g, s = Opt("cast", "showIcon"); Checkbox(p, "Zaubersymbol", g, s)
-		g, s = Opt("cast", "showTime"); Checkbox(p, "Restzeit", g, s)
+		Checkbox(p, "Enemies only", g, s)
+		Header(p, "Display")
+		g, s = Opt("cast", "target"); Checkbox(p, "Cast bar for the target", g, s)
+		g, s = Opt("cast", "focus"); Checkbox(p, "Cast bar for the focus", g, s)
+		g, s = Opt("cast", "showIcon"); Checkbox(p, "Spell icon", g, s)
+		g, s = Opt("cast", "showTime"); Checkbox(p, "Remaining time", g, s)
 	end },
-	{ "Warnungen", function(p)
+	{ "Alerts", function(p)
 		local g, s
 		local function AlertTest(title, sub, kind, snd, ...)
 			local A = F.modules.alerts
 			if A and A.Alert then A:Alert(title, sub, kind, snd, ...) end
 		end
-		Header(p, "Meldungen")
-		Checkbox(p, "Warnungen anzeigen", ModuleGet("alerts"), ModuleSet("alerts"))
-		g, s = Opt("alerts", "sound"); Checkbox(p, "Warntoene (Hauptschalter)", g, s)
-		Header(p, "Wann soll gewarnt werden?")
-		g, s = Opt("alerts", "gain"); Checkbox(p, "Aggro bekommen (ein Gegner greift dich an)", g, s)
-		g, s = Opt("alerts", "gainTank"); Checkbox(p, "... auch im Tank-Modus", g, s)
-		SoundCycle(p, "Ton: Aggro bekommen", "soundGain")
-		g, s = Opt("alerts", "loss"); Checkbox(p, "Aggro verloren (ein Gegner wechselt das Ziel)", g, s)
-		SoundCycle(p, "Ton: Aggro verloren", "soundLoss")
-		g, s = Opt("alerts", "tankWarn"); Checkbox(p, "Tank: Gegner greift einen Mitspieler an", g, s)
-		g, s = Opt("alerts", "threatHigh"); Checkbox(p, "Threat hoch (nur wo Threat lesbar ist)", g, s)
-		Slider(p, "Ab Threat", 60, 100, 5, function() return F.db.alerts.threatPct end,
+		Header(p, "Messages")
+		Checkbox(p, "Show alerts", ModuleGet("alerts"), ModuleSet("alerts"))
+		g, s = Opt("alerts", "sound"); Checkbox(p, "Alert sounds (master switch)", g, s)
+		Header(p, "When should alerts appear?")
+		g, s = Opt("alerts", "gain"); Checkbox(p, "Aggro gained (an enemy attacks you)", g, s)
+		g, s = Opt("alerts", "gainTank"); Checkbox(p, "... also in tank mode", g, s)
+		SoundCycle(p, "Sound: aggro gained", "soundGain")
+		g, s = Opt("alerts", "loss"); Checkbox(p, "Aggro lost (an enemy switches target)", g, s)
+		SoundCycle(p, "Sound: aggro lost", "soundLoss")
+		g, s = Opt("alerts", "tankWarn"); Checkbox(p, "Tank: an enemy attacks a party member", g, s)
+		g, s = Opt("alerts", "threatHigh"); Checkbox(p, "High threat (only where threat is readable)", g, s)
+		Slider(p, "From threat", 60, 100, 5, function() return F.db.alerts.threatPct end,
 			function(v) F.db.alerts.threatPct = v end, function(v) return v .. " %" end)
-		SoundCycle(p, "Ton: Threat hoch", "soundThreat")
-		g, s = Opt("alerts", "lowHealth"); Checkbox(p, "Niedrige HP (nur wo HP lesbar sind)", g, s)
-		Slider(p, "HP-Schwelle", 10, 60, 5, function() return F.db.alerts.lowHealthPct end,
+		SoundCycle(p, "Sound: high threat", "soundThreat")
+		g, s = Opt("alerts", "lowHealth"); Checkbox(p, "Low health (only where health is readable)", g, s)
+		Slider(p, "Health threshold", 10, 60, 5, function() return F.db.alerts.lowHealthPct end,
 			function(v) F.db.alerts.lowHealthPct = v end, function(v) return v .. " %" end)
-		SoundCycle(p, "Ton: Niedrige HP", "soundLow")
-		Header(p, "Bedingungen")
-		g, s = Opt("alerts", "onlyInGroup"); Checkbox(p, "Nur in einer Gruppe", g, s)
-		g, s = Opt("alerts", "onlyInCombat"); Checkbox(p, "Nur im Kampf", g, s)
-		Slider(p, "Pause pro Gegner", 2, 30, 1, function() return F.db.alerts.pause end,
+		SoundCycle(p, "Sound: low health", "soundLow")
+		Header(p, "Conditions")
+		g, s = Opt("alerts", "onlyInGroup"); Checkbox(p, "Only in a group", g, s)
+		g, s = Opt("alerts", "onlyInCombat"); Checkbox(p, "Only in combat", g, s)
+		Slider(p, "Pause per enemy", 2, 30, 1, function() return F.db.alerts.pause end,
 			function(v) F.db.alerts.pause = v end, function(v) return v .. " s" end)
-		Header(p, "Darstellung")
-		Slider(p, "Anzeigedauer", 1, 8, 0.5, function() return F.db.alerts.hold end,
+		Header(p, "Appearance")
+		Slider(p, "Display duration", 1, 8, 0.5, function() return F.db.alerts.hold end,
 			function(v) F.db.alerts.hold = v end, function(v) return string.format("%.1f s", v) end)
-		Slider(p, "Schriftgroesse", 16, 40, 2, function() return F.db.alerts.textSize end,
+		Slider(p, "Font size", 16, 40, 2, function() return F.db.alerts.textSize end,
 			function(v) F.db.alerts.textSize = v end, function(v) return v .. " px" end)
-		ScaleSlider(p, "Groesse der Warnungen", "alert")
-		g, s = Opt("alerts", "showName"); Checkbox(p, "Gegnernamen zeigen", g, s)
-		Header(p, "Testen")
-		Button(p, "Aggro bekommen", function() AlertTest("Aggro!", "%s", "red", "soundGain", "Testgegner") end, 260)
-		Button(p, "Aggro verloren", function() AlertTest("Aggro verloren", "%s  >  %s", "orange", "soundLoss", "Testgegner", "Mitspieler") end, 260)
-		Button(p, "Threat hoch", function() AlertTest("Threat hoch", "%s  (%d%%)", "orange", "soundThreat", "Testgegner", 95) end, 260)
-		Hint(p, "Aggro- und Threat-Meldungen nutzen den Threat des Clients; wo er gesperrt ist (Plaketten im Kampf), gilt nur 'Gegner zielt auf dich'.", 34)
-	end },
-	{ "Kampftext", function(p)
-		Header(p, "Schwebende Zahlen")
-		if F.modules.float and F.modules.float.unavailable then
-			Hint(p, "Auf diesem Client gibt es kein Kampflog fuer Addons, deshalb ist der Kampftext nicht verfuegbar.", 40)
-			return
-		end
-		Checkbox(p, "Kampftext anzeigen", ModuleGet("float"), ModuleSet("float"))
-		ScaleSlider(p, "Groesse des Kampftexts", "float")
-		Slider(p, "Mindestschaden", 0, 1000, 10, function() return F.db.float.minAmount end,
-			function(v) F.db.float.minAmount = v end)
-	end },
-	{ "Cooldowns", function(p)
-		Header(p, "Cooldown-Leiste")
-		Checkbox(p, "Cooldown-Leiste anzeigen", ModuleGet("cooldowns"), ModuleSet("cooldowns"))
-		ScaleSlider(p, "Groesse der Cooldown-Leiste", "cooldowns")
-		local g, s = Opt("cooldowns", "alwaysShow")
-		Checkbox(p, "Symbole auch ohne Cooldown zeigen", g, s)
-		g, s = Opt("cooldowns", "showTimer"); Checkbox(p, "Restzeit als Zahl", g, s)
-		Slider(p, "Symbolgroesse", 24, 64, 2, function() return F.db.cooldowns.size end,
-			function(v)
-				F.db.cooldowns.size = v
-				local m = F.modules.cooldowns
-				if m and m.Rebuild then m:Rebuild() end
-			end, function(v) return v .. " px" end)
-		Hint(p, "Zauber hinzufuegen: /fray cd add <Zauber, ID, slot:13 oder item:ID>.  Entfernen: /fray cd remove <Name oder Nummer>.  Liste: /fray cd list.", 48)
-	end },
-	{ "Komfort", function(p)
-		Header(p, "Haendler")
-		Checkbox(p, "Komfortfunktionen aktiv", ModuleGet("qol"), ModuleSet("qol"))
-		local g, s = Opt("qol", "autoSell")
-		Checkbox(p, "Graue Gegenstaende automatisch verkaufen", g, s)
-		g, s = Opt("qol", "autoRepair")
-		Checkbox(p, "Automatisch reparieren", g, s)
+		ScaleSlider(p, "Alert size", "alert")
+		g, s = Opt("alerts", "showName"); Checkbox(p, "Show enemy names", g, s)
+		Header(p, "Test")
+		Button(p, "Aggro gained", function() AlertTest("Aggro!", "%s", "red", "soundGain", "Test enemy") end, 260)
+		Button(p, "Aggro lost", function() AlertTest("Aggro lost", "%s  >  %s", "orange", "soundLoss", "Test enemy", "Party member") end, 260)
+		Button(p, "High threat", function() AlertTest("High threat", "%s  (%d%%)", "orange", "soundThreat", "Test enemy", 95) end, 260)
+		Hint(p, "Aggro and threat alerts use the client's threat values; where they are hidden (nameplates in combat) only 'enemy is targeting you' counts.", 34)
 	end },
 }
 
@@ -504,7 +470,7 @@ function M:Init()
 	sub:SetTextColor(unpack(DIM))
 	sub:SetText("Version " .. F.version)
 	if panel.dialogHeader then
-		-- der Titel steht in der Plakette; die Version sitzt links oben
+		-- the title is in the plaque; the version sits at the top left
 		title:Hide()
 		sub:ClearAllPoints()
 		sub:SetPoint("TOPLEFT", PAD, -22)
@@ -521,7 +487,7 @@ function M:Init()
 	close:SetScript("OnEnter", function(self) self.tex:SetVertexColor(1, 0.55, 0.45) end)
 	close:SetScript("OnLeave", function(self) self.tex:SetVertexColor(1, 1, 1) end)
 
-	-- Trennlinie unter dem Titel und zwischen Reitern und Inhalt
+	-- Divider under the title and between tabs and content
 	local hline = panel:CreateTexture(nil, "ARTWORK")
 	hline:SetTexture(F.WHITE)
 	hline:SetVertexColor(0.66, 0.52, 0.36, 0.4)
@@ -548,9 +514,9 @@ function M:Init()
 		tab:SetScript("OnLeave", function(self) if M.current ~= i then self.band:SetGlow(false) end end)
 		tabs[i] = tab
 
-		-- Seite in einem Scrollbereich (Mausrad), falls der Inhalt nicht passt
+		-- Page in a scroll area (mouse wheel) in case the content does not fit
 		local scroll = CreateFrame("ScrollFrame", nil, panel)
-		-- Der Scrollbereich ist ringsum 24 px groesser als der Inhalt, damit der Leucht-Halo der Buttons nicht abgeschnitten wird
+		-- The scroll area is 24 px larger all around than the content so the glow halo of the buttons is not cut off
 		scroll:SetPoint("TOPLEFT", PAD + TABW + 20 - 24, -68 + 24)
 		scroll:SetPoint("BOTTOMRIGHT", -PAD + 20, PAD - 20)
 		local holder = CreateFrame("Frame", nil, scroll)
