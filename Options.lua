@@ -319,6 +319,8 @@ local PAGES = {
 		Slider(p, "Grid size", 8, 60, 2, function() return F.db.grid.size end,
 			function(v) F.db.grid.size = v; F:UpdateGrid() end, function(v) return v .. " px" end)
 		Button(p, "Reset positions", function() F:ResetPositions() end)
+		Checkbox(p, "Show minimap button", function() return not F.db.minimap.hide end,
+			function(v) F.db.minimap.hide = not v; local m = F.modules.minimap; if m then m:Refresh() end end)
 		Header(p, "Preview")
 		Button(p, "Test mode (20 seconds)", function() SlashCmdList["FRAY"]("test") end)
 		Header(p, "Data")
@@ -349,7 +351,7 @@ local PAGES = {
 		Slider(p, "Maximum number of enemies", 3, 18, 1, function() return F.db.enemy.maxRows end,
 			function(v) F.db.enemy.maxRows = v end)
 		Cycle(p, "Sorting", function() return F.db.enemy.sort end, function(v) F.db.enemy.sort = v end,
-			{ { key = "threat", name = "by threat" }, { key = "name", name = "by name" } })
+			{ { key = "pull", name = "by pull order" }, { key = "threat", name = "by threat" }, { key = "name", name = "by name" } })
 		Header(p, "Shown elements")
 		local g, s
 		g, s = Opt("enemy", "showPercent"); Checkbox(p, "Health percent", g, s)

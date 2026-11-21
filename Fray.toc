@@ -13,3 +13,4 @@ EnemyList.lua
 CastBar.lua
 Alerts.lua
 Options.lua
+Minimap.lua

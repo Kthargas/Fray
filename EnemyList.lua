@@ -850,12 +850,32 @@ local function TokenEntry(k)
 	return nil
 end
 
+-- Pull order: guid -> running number, assigned when an enemy first shows up; cleared when the list empties
+local pullSeq, pullNext = {}, 0
+
+local function AssignPullOrder(list)
+	if #list == 0 then
+		if next(pullSeq) then pullSeq, pullNext = {}, 0 end
+		return
+	end
+	for _, e in ipairs(list) do
+		local key = tostring(e.guid)
+		local n = pullSeq[key]
+		if not n then pullNext = pullNext + 1; n = pullNext; pullSeq[key] = n end
+		e.order = n
+	end
+end
+
 local function SortEntries(list)
 	local tank = F.db.tank
-	local byName = F.db.enemy.sort == "name"
+	local mode = F.db.enemy.sort
+	local byName = mode == "name"
+	local byPull = mode == "pull"
+	if byPull then AssignPullOrder(list) end
 	table.sort(list, function(a, b)
 		local ai, bi = a.idle and true or false, b.idle and true or false
 		if ai ~= bi then return bi end -- non-fighting enemies to the end
+		if byPull and a.order ~= b.order then return (a.order or 0) < (b.order or 0) end
 		if byName and tostring(a.name or "") ~= tostring(b.name or "") then return tostring(a.name or "") < tostring(b.name or "") end
 		if a.score ~= b.score then
 			if tank then return a.score < b.score end -- Tank: endangered enemies (little threat) first

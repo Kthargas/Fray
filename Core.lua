@@ -297,8 +297,9 @@ local defaults = {
 	scales = {},
 	modules = { enemy = true, cast = true, alerts = true },
 	pos = {},
+	minimap = { hide = false, angle = 215 },
 	grid = { enabled = true, size = 10 },
-	enemy = { showAll = false, perCol = 6, threatOrange = 50, maxRows = 12, sort = "threat",
+	enemy = { showAll = false, perCol = 6, threatOrange = 50, maxRows = 12, sort = "pull",
 		showPercent = true, showPower = true, showMarker = true, showElite = true, showShield = true },
 	cast = { onlyHostile = false, target = true, focus = true, showIcon = true, showTime = true },
 	alerts = { sound = true, lowHealth = true, lowHealthPct = 25, gain = true, gainTank = false, loss = true,
@@ -921,6 +922,8 @@ boot:SetScript("OnEvent", function(_, event, arg1)
 	if event == "ADDON_LOADED" and arg1 == ADDON then
 		FRAYDB = FRAYDB or {}
 		Merge(FRAYDB, defaults)
+		-- one-time: the new default sort order is pull order
+		if FRAYDB.enemy and not FRAYDB.sortMigrated then FRAYDB.sortMigrated = true; FRAYDB.enemy.sort = "pull" end
 		F.db = FRAYDB
 	elseif event == "PLAYER_LOGIN" then
 		for _, name in ipairs(F.order) do

@@ -22,7 +22,7 @@ the game's own target frame. It re-sorts live, closes gaps when an enemy dies an
 - **Aggro shield** next to the portrait in the colour of your threat state (red: you have aggro, orange: lost it, green: safe).
 - Elite and rare markers, a separate cast strip below each frame, and a golden outline for your current target.
 - Shows only enemies fighting you or your group - mobs another player is fighting stay hidden.
-- Sorting by threat or name, maximum rows, rows per column, and switches for every element.
+- Sorting by pull order (default), threat or name, maximum rows, rows per column, and switches for every element.
 
 ### Alerts
 - Aggro gained, aggro lost, high threat and low health, each with its own on/off switch, sound and threshold.
@@ -31,6 +31,7 @@ the game's own target frame. It re-sorts live, closes gaps when an enemy dies an
 
 ### More
 - Target and focus **cast bars** using Blizzard's casting bar art.
+- A minimap button (left click: settings, right click: lock/unlock frames; can be hidden in the settings).
 - A settings window styled like the game menu, a frame mover with grid and live coordinates, global and per-element scale,
   frame colour presets (copper, silver, gold) and a test mode.
 
