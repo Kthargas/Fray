@@ -1000,9 +1000,53 @@ function M:Init()
 		M:Update()
 	end)
 
-	if GetCVar and GetCVar("nameplateShowEnemies") == "0" then
-		F.Print("Enemy nameplates are off - the enemy list needs them. /fray plates enables them.")
+	M:InitPlateWarning()
+end
+
+-- Warning when enemy nameplates are off (the list is built from them and would stay empty):
+-- big text on screen while in combat (and for a few seconds after login) plus a chat message at every pull.
+local function PlatesOff()
+	return F.db.enemy.plateWarn ~= false and F:IsEnabled("enemy")
+		and GetCVar and GetCVar("nameplateShowEnemies") == "0"
+end
+
+function M:InitPlateWarning()
+	local w = CreateFrame("Frame", "FrayPlateWarning", UIParent)
+	w:SetSize(600, 60)
+	w:SetPoint("TOP", UIParent, "TOP", 0, -170)
+	w:SetFrameStrata("HIGH")
+	w:Hide()
+	w.text = w:CreateFontString(nil, "OVERLAY")
+	w.text:SetFont(F.FONT, 22, "OUTLINE")
+	w.text:SetPoint("CENTER")
+	w.text:SetJustifyH("CENTER")
+	w.text:SetTextColor(1, 0.25, 0.2)
+	w.text:SetText("Fray: enemy nameplates are OFF - the enemy list stays empty\n|cffffd27fType /fray plates to turn them on|r")
+	M.warn = w
+
+	local loginUntil = GetTime() + 12
+	local lastChat = 0
+	local function Chat()
+		if PlatesOff() and GetTime() - lastChat > 15 then
+			lastChat = GetTime()
+			F.Print("|cffff4040Enemy nameplates are off - the enemy list stays empty.|r Type /fray plates to turn them on.")
+		end
 	end
+	F:On("PLAYER_REGEN_DISABLED", Chat)
+
+	w.t = 0
+	w:SetScript("OnUpdate", nil)
+	local ticker = CreateFrame("Frame")
+	ticker.t = 0
+	ticker:SetScript("OnUpdate", function(self, dt)
+		self.t = self.t + dt
+		if self.t < 0.5 then return end
+		self.t = 0
+		if not F.db then return end
+		local show = PlatesOff() and (UnitAffectingCombat("player") or GetTime() < loginUntil)
+		w:SetShown(show and true or false)
+	end)
+	if PlatesOff() then Chat() end
 end
 
 function M:SetEnabled(on)

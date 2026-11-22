@@ -352,6 +352,8 @@ local PAGES = {
 			function(v) F.db.enemy.maxRows = v end)
 		Cycle(p, "Sorting", function() return F.db.enemy.sort end, function(v) F.db.enemy.sort = v end,
 			{ { key = "pull", name = "by pull order" }, { key = "threat", name = "by threat" }, { key = "name", name = "by name" } })
+		Checkbox(p, "Warn when enemy nameplates are off", function() return F.db.enemy.plateWarn ~= false end,
+			function(v) F.db.enemy.plateWarn = v end)
 		Header(p, "Shown elements")
 		local g, s
 		g, s = Opt("enemy", "showPercent"); Checkbox(p, "Health percent", g, s)

@@ -1,7 +1,7 @@
 local ADDON, F = ...
 _G.Fray = F
 
-F.version = "1.0.1"
+F.version = "1.0.3"
 F.modules = {}
 F.order = {}
 F.movables = {}
@@ -300,7 +300,7 @@ local defaults = {
 	minimap = { hide = false, angle = 215 },
 	grid = { enabled = true, size = 10 },
 	enemy = { showAll = false, perCol = 6, threatOrange = 50, maxRows = 12, sort = "pull",
-		showPercent = true, showPower = true, showMarker = true, showElite = true, showShield = true },
+		plateWarn = true, showPercent = true, showPower = true, showMarker = true, showElite = true, showShield = true },
 	cast = { onlyHostile = false, target = true, focus = true, showIcon = true, showTime = true },
 	alerts = { sound = true, lowHealth = true, lowHealthPct = 25, gain = true, gainTank = false, loss = true,
 		tankWarn = true, threatHigh = true, threatPct = 90, onlyInGroup = true, onlyInCombat = true, pause = 8,
@@ -672,6 +672,10 @@ if F.HasCombatLog then
 	end)
 end
 
+-- guid -> true once the enemy was seen fighting us/our group; stays while it is in combat
+F.tagged = {}
+F:On("PLAYER_REGEN_ENABLED", function() wipe(F.tagged) end)
+
 -- An enemy fighting us or our group (or all hostile ones if showAll).
 function F.IsEngaged(unit, strict)
 	if not F.Bool(UnitExists(unit)) then return false end
@@ -680,15 +684,27 @@ function F.IsEngaged(unit, strict)
 	if not F.Bool(UnitCanAttack("player", unit)) then return false end
 	if F.db.enemy.showAll and not strict then return true end
 	local guid = UnitGUID(unit)
-	local t = F.Readable(guid) and guid and F.recent[guid]
+	local gk = F.Readable(guid) and guid or nil
+	local t = gk and F.recent[gk]
 	if t then
-		if GetTime() - t < RECENT_SECS then return true end
-		F.recent[guid] = nil
+		if GetTime() - t < RECENT_SECS then
+			F.tagged[gk] = true
+			return true
+		end
+		F.recent[gk] = nil
 	end
-	if not F.Bool(UnitAffectingCombat(unit)) then return false end
+	if not F.Bool(UnitAffectingCombat(unit)) then
+		if gk then F.tagged[gk] = nil end
+		return false
+	end
 	local _, status = F.GetThreat(unit)
-	if status ~= nil then return true end
-	return IsFriendlyGroupUnit(unit .. "target")
+	if status ~= nil or IsFriendlyGroupUnit(unit .. "target") then
+		if gk then F.tagged[gk] = true end
+		return true
+	end
+	-- Was fighting us before and is still in combat: keep it, e.g. when a stranger outside the group
+	-- attacks an enemy that is tagged by us.
+	return gk ~= nil and F.tagged[gk] == true
 end
 
 function F.EnumerateEnemies()
