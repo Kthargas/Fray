@@ -1,7 +1,7 @@
 local ADDON, F = ...
 _G.Fray = F
 
-F.version = "1.1.0"
+F.version = "1.0.1"
 F.modules = {}
 F.order = {}
 F.movables = {}

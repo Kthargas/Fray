@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.0 - 2026-11-22
+## 1.0.1 - 2026-11-22
 
 - New: sort the enemy list by pull order (new default); threat and name still available.
 - New: minimap button (left click: settings, right click: lock/unlock frames), can be hidden in the settings.
