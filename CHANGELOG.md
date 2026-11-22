@@ -1,11 +1,8 @@
 # Changelog
 
-## 1.0.3 - 2026-11-22
-
-- Fixed: an enemy that is tagged by you no longer drops out of the list when a player outside your group attacks it.
-
 ## 1.0.2 - 2026-11-22
 
+- Fixed: an enemy that is tagged by you no longer drops out of the list when a player outside your group attacks it.
 - New: warning when enemy nameplates are off (the list is built from them): big text on screen during combat and a chat message at every pull. Can be switched off in the Enemy list settings.
 
 ## 1.0.1 - 2026-11-22
