@@ -1,7 +1,7 @@
 local ADDON, F = ...
 _G.Fray = F
 
-F.version = "1.0.0"
+F.version = "1.1.0"
 F.modules = {}
 F.order = {}
 F.movables = {}
@@ -1054,6 +1054,7 @@ SlashCmdList["FRAY"] = function(msg)
 	elseif cmd == "plates" then
 		if InCombatLockdown() then F.Print("Not possible in combat.") return end
 		SetCVar("nameplateShowEnemies", 1)
+		pcall(SetCVar, "nameplateMaxDistance", 60)   -- enemies stay listed until they are this far away
 		F.Print("Enemy nameplates enabled.")
 	elseif cmd == "toggle" then
 		local name = rest:lower()

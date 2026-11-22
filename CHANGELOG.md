@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.0 - 2026-11-22
+
+- New: sort the enemy list by pull order (new default); threat and name still available.
+- New: minimap button (left click: settings, right click: lock/unlock frames), can be hidden in the settings.
+- Fixed: enemies no longer drop out of the list when they walk out of nameplate range while you are in combat.
+- `/fray plates` now also raises the nameplate distance to 60 yards.
+- Removed the combat text, cooldown bar and convenience (auto-sell/repair) modules to keep Fray focused on the enemy list.
+- The whole addon, including the settings window, is now English.
+
 ## 1.0.0 - 2026-11-21
 
 First public release.

@@ -812,6 +812,7 @@ end
 
 local cacheTok = {}   -- nameplate -> last known values (for "out of sight")
 local CACHE_SECS = 20
+local OUT_OF_RANGE_SECS = 45   -- without a combat log: how long an enemy stays listed after its nameplate vanished (out of range)
 
 local STATUS_SCORE = { red = 100, orange = 60, green = 10 }
 
@@ -840,8 +841,16 @@ local function TokenEntry(k)
 	-- Nameplate gone (enemy out of sight): only with a combat log can we tell whether it is still fighting
 	local c = cacheTok[k]
 	if c then
-		local alive = F.HasCombatLog and not F.Bool(UnitExists(unit)) and F.recent[c.guid]
-			and GetTime() - F.recent[c.guid] < CACHE_SECS
+		local alive
+		if F.HasCombatLog then
+			alive = not F.Bool(UnitExists(unit)) and F.recent[c.guid]
+				and GetTime() - F.recent[c.guid] < CACHE_SECS
+		else
+			-- No combat log: the plate is gone (nobody stands on this token any more) = enemy walked out of range.
+			-- Keep it while we are in combat; a dead enemy keeps its plate for a while and is dropped above.
+			alive = not F.Bool(UnitExists(unit)) and F.Bool(UnitAffectingCombat("player"))
+				and GetTime() - (c.seen or 0) < OUT_OF_RANGE_SECS
+		end
 		if alive then
 			return { cache = c, name = c.name, tanking = false, pct = c.pct, score = c.score or 0, guid = c.guid, token = k }
 		end
@@ -931,15 +940,23 @@ function M:Update()
 		return
 	end
 
-	local list, seen = {}, {}
+	local list, seen, cached = {}, {}, {}
 	for k = 1, TOKENS do
 		local e = TokenEntry(k)
 		if e then
-			list[#list + 1] = e
-			seen[e.guid] = true
+			if e.cache then
+				cached[#cached + 1] = e
+			else
+				list[#list + 1] = e
+				seen[e.guid] = true
+			end
 		end
 	end
 	for _, e in ipairs(ExtraEntries(seen)) do list[#list + 1] = e end
+	-- out-of-sight enemies stay listed, unless the same enemy is visible again (other nameplate / target)
+	for _, e in ipairs(cached) do
+		if not seen[e.guid] then list[#list + 1] = e; seen[e.guid] = true end
+	end
 	SortEntries(list)
 
 	local maxRows = math.min(MAX_ROWS, F.db.enemy.maxRows or 12)

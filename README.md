@@ -37,8 +37,7 @@ the game's own target frame. It re-sorts live, closes gaps when an enemy dies an
 
 ## Requirements
 
-- World of Warcraft: Forever (interface 16001). The TOC also lists 20506 and 20505, but those clients are untested.
-- Enemy nameplates must be enabled (`/fray plates` turns them on).
+None besides the game client (World of Warcraft: Forever). Enemy nameplates have to be switched on in the game settings; `/fray plates` does it for you.
 
 ## Installation
 
