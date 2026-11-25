@@ -1,5 +1,7 @@
 # Fray
 
+*Your Enemies, but listed*
+
 Fray puts every enemy that is fighting you or your group into one list, styled like the game's own target frame. Each entry shows who is attacking you right now, so you see at a glance where aggro sits and which mob just turned on someone else.
 
 ## What you get

@@ -1,6 +1,6 @@
 local ADDON, F = ...
 
--- English is the base language; German overrides it on deDE clients (same setup as SquareMap).
+-- English is the base language; German overrides it on deDE clients (same setup as Mundi).
 local L = setmetatable({}, { __index = function(_, key) return key end })
 F.L = L
 
@@ -43,7 +43,7 @@ L.GRID = "Snap to grid"
 L.GRID_TT = "Frames snap to a grid while you move them. Hold Alt for free placement."
 L.GRID_SIZE = "Grid size"
 L.MINIMAP_BUTTON = "Minimap button"
-L.MINIMAP_BUTTON_TT = "Left click: options. Right click: unlock or lock the frames. With SquareMap the button can also sit in the addon button window."
+L.MINIMAP_BUTTON_TT = "Left click: options. Right click: unlock or lock the frames. With Mundi the button can also sit in the addon button window."
 
 -- Enemy list
 L.ENEMY_ENABLE = "Show enemy list"
@@ -202,7 +202,7 @@ if GetLocale() == "deDE" then
 	L.GRID_TT = "Rahmen rasten beim Verschieben an einem Raster ein. Alt gedrückt halten für freie Platzierung."
 	L.GRID_SIZE = "Rastergröße"
 	L.MINIMAP_BUTTON = "Minimap-Button"
-	L.MINIMAP_BUTTON_TT = "Linksklick: Optionen. Rechtsklick: Rahmen entsperren oder sperren. Mit SquareMap kann der Button auch im Fenster der Addon-Buttons liegen."
+	L.MINIMAP_BUTTON_TT = "Linksklick: Optionen. Rechtsklick: Rahmen entsperren oder sperren. Mit Mundi kann der Button auch im Fenster der Addon-Buttons liegen."
 
 	L.ENEMY_ENABLE = "Gegnerliste anzeigen"
 	L.SHOW_ALL = "Alle feindlichen Gegner zeigen"
