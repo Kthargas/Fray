@@ -1,13 +1,18 @@
-## Interface: 16001, 20506, 20505
+## Interface: 16001
 ## Title: Fray
 ## Notes: Live enemy list with threat, aggro alerts, target and focus cast bars. Built from Blizzard's own unit frame art.
+## Notes-deDE: Live-Gegnerliste mit Bedrohung, Aggro-Warnungen und Zauberleisten für Ziel und Fokus. Gebaut aus Blizzards eigener Einheitenrahmen-Grafik.
 ## Author: Kthargas
-## Version: 1.1.0
-## IconTexture: Interface\AddOns\Fray\Textures\Icon
+## Version: 1.2.0
+## IconTexture: Interface\Icons\Ability_Warrior_DefensiveStance
 ## SavedVariables: FRAYDB
+## AddonCompartmentFunc: Fray_OnAddonCompartmentClick
+## AddonCompartmentFuncOnEnter: Fray_OnAddonCompartmentEnter
+## AddonCompartmentFuncOnLeave: Fray_OnAddonCompartmentLeave
 ## X-Website: https://github.com/Kthargas/Fray
 ## X-License: MIT
 
+Locales.lua
 Core.lua
 EnemyList.lua
 CastBar.lua

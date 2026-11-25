@@ -1,119 +1,43 @@
 local ADDON, F = ...
+local L = F.L
 _G.Fray = F
 
-F.version = "1.1.0"
+F.version = C_AddOns and C_AddOns.GetAddOnMetadata(ADDON, "Version") or "1.2.0"
 F.modules = {}
 F.order = {}
 F.movables = {}
 F.unlocked = false
 
-F.TEXROOT = "Interface\\AddOns\\Fray\\Textures\\"
 F.WHITE = "Interface\\Buttons\\WHITE8X8"
-
--- Fonts: only the game's own fonts, resolved through Blizzard's font objects so they fit the client's locale.
-local function GameFont(objName, fallback)
-	local o = _G[objName]
-	if o and o.GetFont then
-		local ok, path = pcall(o.GetFont, o)
-		if ok and type(path) == "string" and path ~= "" then return path end
-	end
-	return fallback
-end
-F.FONT = STANDARD_TEXT_FONT or GameFont("GameFontNormal", "Fonts\\FRIZQT__.TTF")
-F.FONT_BOLD = F.FONT
-F.FONT_TITLE = GameFont("QuestTitleFont", F.FONT)
-
--- Copper palette (matches the Forever interface)
-F.PAL = {
-	edge = { 0.58, 0.46, 0.30 },     -- bronze (window, icons)
-	rim = { 0.82, 0.76, 0.72 },      -- light plate edge like nameplates
-	hover = { 0.92, 0.74, 0.50 },    -- frame under the mouse / selected
-	gold = { 0.88, 0.74, 0.50 },     -- titles, highlights
-	text = { 0.92, 0.90, 0.85 },
-	dim = { 0.72, 0.70, 0.66 },
-	bg = { 0.09, 0.065, 0.04 },      -- dark brown
-	bgLight = { 0.24, 0.17, 0.10 },
-}
-F.BAR_TEX = F.TEXROOT .. "Pill.tga"             -- rounded bar (grey-white, gets tinted)
-F.PANEL_BORDER = { 0.55, 0.42, 0.24, 1 }
-
--- Frame colour of the plates (option): the metal texture is grey and gets tinted
-F.RIM = {
-	bronze = { name = "Copper (Forever)", c = { 0.88, 0.70, 0.48 } },
-	silver = { name = "Silver", c = { 0.86, 0.82, 0.78 } },
-	gold = { name = "Gold", c = { 1.0, 0.84, 0.34 } },
-}
-F.RIM_ORDER = { "bronze", "silver", "gold" }
+-- The only file Fray ships: an invisible mask that rounds the right end of the health and resource bars
+-- (Blizzard's own masks cannot be mirrored). Everything you see is Blizzard art.
+F.BAR_MASK = "Interface\\AddOns\\Fray\\Textures\\BarMask"
+F.FONT = STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
 
 -- Blizzard atlases: one candidate list per purpose, the first name the client knows is used.
--- Without a match our own textures stay. The names are retail / Dragonflight names; whether Forever knows them
--- is shown by /fray atlas.
 F.ATLAS = {
-	hpFill = { "UI-HUD-UnitFrame-Target-PortraitOn-Bar-Health", "UI-HUD-UnitFrame-Target-PortraitOn-Bar-Health-Texture",
-		"UI-HUD-UnitFrame-Player-PortraitOn-Bar-Health", "UI-HUD-UnitFrame-Player-PortraitOn-Bar-Health-Texture" },
-	manaFill = { "UI-HUD-UnitFrame-Target-PortraitOn-Bar-Mana", "UI-HUD-UnitFrame-Target-PortraitOn-Bar-Mana-Texture",
-		"UI-HUD-UnitFrame-Player-PortraitOn-Bar-Mana", "UI-HUD-UnitFrame-Player-PortraitOn-Bar-Mana-Texture" },
-	castFill = { "UI-CastingBar-Filling-Standard", "ui-castingbar-filling-standard" },
-	castChannel = { "UI-CastingBar-Filling-Channel", "ui-castingbar-filling-channel" },
-	castSpark = { "UI-CastingBar-Pip", "ui-castingbar-pip", "UI-CastingBar-Spark" },
-	-- Blizzard's target frame (Dragonflight): frame, combat glow, type bar, bars, masks, decorations
+	-- Blizzard's target frame (Dragonflight): frame, combat glow, type bar, bars
 	tFrame = { "UI-HUD-UnitFrame-Target-PortraitOn" },
 	tRareFrame = { "UI-HUD-UnitFrame-Target-Rare-PortraitOn" },
 	tFlash = { "UI-HUD-UnitFrame-Target-PortraitOn-InCombat" },
 	tType = { "UI-HUD-UnitFrame-Target-PortraitOn-Type" },
 	tHealth = { "UI-HUD-UnitFrame-Target-PortraitOn-Bar-Health" },
-	tHealthMask = { "UI-HUD-UnitFrame-Target-PortraitOn-Bar-Health-Mask" },
 	tMana = { "UI-HUD-UnitFrame-Target-PortraitOn-Bar-Mana" },
 	tRage = { "UI-HUD-UnitFrame-Target-PortraitOn-Bar-Rage" },
 	tEnergy = { "UI-HUD-UnitFrame-Target-PortraitOn-Bar-Energy" },
 	tFocus = { "UI-HUD-UnitFrame-Target-PortraitOn-Bar-Focus" },
 	tRunic = { "UI-HUD-UnitFrame-Target-PortraitOn-Bar-RunicPower" },
-	mFrame = { "UI-HUD-UnitFrame-Target-MinusMob-PortraitOn" },
-	mFlash = { "UI-HUD-UnitFrame-Target-MinusMob-PortraitOn-InCombat" },
-	mHealth = { "UI-HUD-UnitFrame-Target-MinusMob-PortraitOn-Bar-Health" },
-	mHealthMask = { "UI-HUD-UnitFrame-Target-MinusMob-PortraitOn-Bar-Health-Mask" },
-	tElite = { "UI-HUD-UnitFrame-Target-PortraitOn-Boss-Gold" },
-	tBoss = { "UI-HUD-UnitFrame-Target-PortraitOn-Boss-Gold-Winged" },
-	tRareDeco = { "ui-hud-unitframe-target-portraiton-boss-rare-silver" },
 	tStar = { "UnitFrame-Target-PortraitOn-Boss-Rare-Star", "UI-HUD-UnitFrame-Target-PortraitOn-Boss-Rare-Star" },
-	tCircle = { "UI-HUD-UnitFrame-SmallCircle" },
 	-- small dragon icons of the nameplates (elite gold, rare elite silver)
 	eliteGold = { "nameplates-icon-elite-gold", "Nameplates-Icon-Elite-Gold", "nameplates-icon-elite-boss" },
 	eliteSilver = { "nameplates-icon-elite-silver", "Nameplates-Icon-Elite-Silver" },
-	-- Cast bar (names from Blizzard's target cast bar)
+	-- Blizzard's cast bar
 	castFrame = { "UI-CastingBar-Frame" },
 	castBack = { "UI-CastingBar-Background" },
-	castShield = { "UI-CastingBar-Shield" },
-	-- Window frame (Blizzard's metal frame, layout ButtonFrameTemplateNoPortrait)
-	metalTL = { "UI-Frame-Metal-CornerTopLeft" }, metalTR = { "UI-Frame-Metal-CornerTopRight" },
-	metalBL = { "UI-Frame-Metal-CornerBottomLeft" }, metalBR = { "UI-Frame-Metal-CornerBottomRight" },
-	metalTop = { "_UI-Frame-Metal-EdgeTop" }, metalBottom = { "_UI-Frame-Metal-EdgeBottom" },
-	metalLeft = { "!UI-Frame-Metal-EdgeLeft" }, metalRight = { "!UI-Frame-Metal-EdgeRight" },
-	-- Tooltip frame (layout TooltipDefaultLayout)
-	ttTL = { "Tooltip-NineSlice-CornerTopLeft" }, ttTR = { "Tooltip-NineSlice-CornerTopRight" },
-	ttBL = { "Tooltip-NineSlice-CornerBottomLeft" }, ttBR = { "Tooltip-NineSlice-CornerBottomRight" },
-	ttT = { "_Tooltip-NineSlice-EdgeTop" }, ttB = { "_Tooltip-NineSlice-EdgeBottom" },
-	ttL = { "!Tooltip-NineSlice-EdgeLeft" }, ttR = { "!Tooltip-NineSlice-EdgeRight" },
-	ttC = { "Tooltip-NineSlice-Center" },
-	-- plain metal frame (SimplePanelTemplate): one corner for all four (mirrored), one edge top/bottom,
-	-- one edge left/right
-	smC = { "UI-Frame-SimpleMetal-CornerTopLeft" }, smT = { "_UI-Frame-SimpleMetal-EdgeTop" },
-	smL = { "!UI-Frame-SimpleMetal-EdgeLeft" },
-	-- Dialog frame of the game menu (layout "Dialog"): diamond corners, edges, header plaque
-	dmTL = { "UI-Frame-DiamondMetal-CornerTopLeft" }, dmTR = { "UI-Frame-DiamondMetal-CornerTopRight" },
-	dmBL = { "UI-Frame-DiamondMetal-CornerBottomLeft" }, dmBR = { "UI-Frame-DiamondMetal-CornerBottomRight" },
-	dmT = { "_UI-Frame-DiamondMetal-EdgeTop" }, dmB = { "_UI-Frame-DiamondMetal-EdgeBottom" },
-	dmL = { "!UI-Frame-DiamondMetal-EdgeLeft" }, dmR = { "!UI-Frame-DiamondMetal-EdgeRight" },
-	dmHL = { "UI-Frame-DiamondMetal-Header-CornerLeft" }, dmHR = { "UI-Frame-DiamondMetal-Header-CornerRight" },
-	dmHC = { "_UI-Frame-DiamondMetal-Header-Tile" },
-	-- Controls
-	closeBtn = { "RedButton-Exit" },
-	cbBox = { "checkbox-minimal" }, cbCheck = { "checkmark-minimal" },
-	sliderL = { "Minimal_SliderBar_Left" }, sliderM = { "_Minimal_SliderBar_Middle" }, sliderR = { "Minimal_SliderBar_Right" },
-	sliderThumb = { "Minimal_SliderBar_Button" },
-	-- Aggro indicator candidates: tank shield of the role icons (candidate list, first match wins)
-	aggroIcon = { "UI-LFG-RoleIcon-Tank", "groupfinder-icon-role-large-tank", "roleicon-tiny-tank", "UI-LFG-RoleIcon-Tank-Micro",
-		"GarrMission_RoleIcon-Tank", "Ping_Chat_Warning" },
+	castFill = { "UI-CastingBar-Filling-Standard", "ui-castingbar-filling-standard" },
+	castChannel = { "UI-CastingBar-Filling-Channel", "ui-castingbar-filling-channel" },
+	castLocked = { "UI-CastingBar-Uninterruptable", "ui-castingbar-uninterruptable" },
+	castSpark = { "UI-CastingBar-Pip", "ui-castingbar-pip", "UI-CastingBar-Spark" },
 }
 
 function F.AtlasName(key)
@@ -132,24 +56,6 @@ function F.AtlasName(key)
 	end
 	F.atlasCache[key] = false
 	return nil
-end
-
--- Put an atlas on a status bar fill; the rounding of our own bar shape is applied as a mask (like Blizzard does).
-function F.AtlasBar(bar, key, shapeFile)
-	local name = F.AtlasName(key)
-	if not name then return false end
-	local t = bar:GetStatusBarTexture()
-	if not t then return false end
-	if not pcall(t.SetAtlas, t, name, false) then return false end
-	if bar.CreateMaskTexture then
-		if not bar.atlasMask then
-			bar.atlasMask = bar:CreateMaskTexture()
-			bar.atlasMask:SetAllPoints(bar)
-			t:AddMaskTexture(bar.atlasMask)
-		end
-		bar.atlasMask:SetTexture(F.TEXROOT .. shapeFile, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
-	end
-	return true
 end
 
 -- Name and size of an atlas (nil if the client does not know it)
@@ -186,113 +92,8 @@ function F.PlaceThreeSlice(t, parent, x, y, w, h)
 	t.M:SetPoint("BOTTOMRIGHT", t.R, "BOTTOMLEFT", 0, 0)
 end
 
--- Plain metal frame from atlases around "frame" (corners mirrored, edges tiled) + dark fill.
--- Returns false if the client lacks the atlases. The art sits exactly on the frame corners (no offsets).
-function F.AtlasFrame(frame, bg, inset)
-	if not (F.AtlasName("smC") and F.AtlasName("smT") and F.AtlasName("smL")) then return false end
-	local back = frame:CreateTexture(nil, "BACKGROUND")
-	back:SetColorTexture(bg[1], bg[2], bg[3], bg[4] or 1)
-	back:SetPoint("TOPLEFT", inset or 3, -(inset or 3))
-	back:SetPoint("BOTTOMRIGHT", -(inset or 3), inset or 3)
-	local function t(key, flipX, flipY)
-		local x = frame:CreateTexture(nil, "OVERLAY")
-		x:SetAtlas(F.AtlasName(key), true)
-		if flipX or flipY then
-			x:SetTexCoord(flipX and 1 or 0, flipX and 0 or 1, flipY and 1 or 0, flipY and 0 or 1)
-		end
-		return x
-	end
-	local tl, tr, bl, br = t("smC"), t("smC", true), t("smC", false, true), t("smC", true, true)
-	tl:SetPoint("TOPLEFT"); tr:SetPoint("TOPRIGHT"); bl:SetPoint("BOTTOMLEFT"); br:SetPoint("BOTTOMRIGHT")
-	local top, bottom, left, right = t("smT"), t("smT", false, true), t("smL"), t("smL", true)
-	top:SetPoint("TOPLEFT", tl, "TOPRIGHT"); top:SetPoint("TOPRIGHT", tr, "TOPLEFT")
-	bottom:SetPoint("BOTTOMLEFT", bl, "BOTTOMRIGHT"); bottom:SetPoint("BOTTOMRIGHT", br, "BOTTOMLEFT")
-	left:SetPoint("TOPLEFT", tl, "BOTTOMLEFT"); left:SetPoint("BOTTOMLEFT", bl, "TOPLEFT")
-	right:SetPoint("TOPRIGHT", tr, "BOTTOMRIGHT"); right:SetPoint("BOTTOMRIGHT", br, "TOPRIGHT")
-	return true
-end
-
--- Frame like the game menu (Blizzard's dialog frame): diamond corners, tiled edges, dialog background and
--- a header plaque that overlaps the top edge. Returns the plaque (frame) or nil if the client
--- lacks the atlases.
-function F.DialogFrame(frame, headerText)
-	for _, k in ipairs({ "dmTL", "dmTR", "dmBL", "dmBR", "dmT", "dmB", "dmL", "dmR", "dmHL", "dmHR", "dmHC" }) do
-		if not F.AtlasName(k) then return nil end
-	end
-	local bg = frame:CreateTexture(nil, "BACKGROUND", nil, -5)
-	bg:SetTexture("Interface\\DialogFrame\\UI-DialogBox-Background", "REPEAT", "REPEAT")
-	bg:SetHorizTile(true)
-	bg:SetVertTile(true)
-	bg:SetPoint("TOPLEFT", 7, -7)
-	bg:SetPoint("BOTTOMRIGHT", -7, 7)
-	local function tex(key, parent, layer)
-		local t = (parent or frame):CreateTexture(nil, layer or "OVERLAY")
-		t:SetAtlas(F.AtlasName(key), true)
-		return t
-	end
-	local tl, tr, bl, br = tex("dmTL"), tex("dmTR"), tex("dmBL"), tex("dmBR")
-	tl:SetPoint("TOPLEFT"); tr:SetPoint("TOPRIGHT"); bl:SetPoint("BOTTOMLEFT"); br:SetPoint("BOTTOMRIGHT")
-	local top, bottom, left, right = tex("dmT"), tex("dmB"), tex("dmL"), tex("dmR")
-	top:SetPoint("TOPLEFT", tl, "TOPRIGHT"); top:SetPoint("TOPRIGHT", tr, "TOPLEFT")
-	bottom:SetPoint("BOTTOMLEFT", bl, "BOTTOMRIGHT"); bottom:SetPoint("BOTTOMRIGHT", br, "BOTTOMLEFT")
-	left:SetPoint("TOPLEFT", tl, "BOTTOMLEFT"); left:SetPoint("BOTTOMLEFT", bl, "TOPLEFT")
-	right:SetPoint("TOPRIGHT", tr, "BOTTOMRIGHT"); right:SetPoint("BOTTOMRIGHT", br, "TOPRIGHT")
-
-	local h = CreateFrame("Frame", nil, frame)
-	h:SetFrameLevel(frame:GetFrameLevel() + 10)
-	local fs = h:CreateFontString(nil, "OVERLAY")
-	fs:SetFont(STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF", 14, "")
-	fs:SetTextColor(1, 0.82, 0)
-	fs:SetText(headerText or "")
-	local sw = fs:GetStringWidth()
-	if type(sw) ~= "number" then sw = 60 end
-	local w = sw + 64
-	h:SetSize(w, 39)
-	h:SetPoint("TOP", frame, "TOP", 0, 11)
-	fs:SetPoint("TOP", h, "TOP", 0, -13)
-	local hl, hr, hc = tex("dmHL", h, "BACKGROUND"), tex("dmHR", h, "BACKGROUND"), tex("dmHC", h, "BACKGROUND")
-	hl:SetPoint("LEFT")
-	hr:SetPoint("RIGHT")
-	hc:SetPoint("TOPLEFT", hl, "TOPRIGHT")
-	hc:SetPoint("BOTTOMRIGHT", hr, "BOTTOMLEFT")
-	h.text = fs
-	return h
-end
-
-function F.AtlasReport()
-	if not (C_Texture and C_Texture.GetAtlasInfo) then
-		F.Print("C_Texture.GetAtlasInfo is missing in this client - using the built-in textures.")
-		return
-	end
-	for _, key in ipairs({ "hpFill", "manaFill", "castFill", "castChannel", "castSpark", "tFrame", "tFlash", "tType", "tHealth",
-		"tHealthMask", "tMana", "mFrame", "tElite", "tBoss", "tRareDeco", "tStar", "tCircle", "eliteGold", "eliteSilver" }) do
-		local n = F.AtlasName(key)
-		F.Print(string.format("%s: %s", key, n and ("|cff55dd55" .. n .. "|r") or "|cffdd5555not available - using built-in texture|r"))
-	end
-end
-F.bands = {}
-function F.RimColor()
-	local s = F.RIM[(F.db and F.db.frameStyle) or "bronze"] or F.RIM.bronze
-	return s.c[1], s.c[2], s.c[3]
-end
-F.rimTex = {}
--- Tint a texture (grey metal frame) with the frame colour and remember it for later colour changes
-function F.TintRim(tex)
-	tex:SetVertexColor(F.RimColor())
-	F.rimTex[#F.rimTex + 1] = tex
-end
-function F.ApplyFrameStyle()
-	for _, t in ipairs(F.rimTex) do t:SetVertexColor(F.RimColor()) end
-	for _, band in ipairs(F.bands) do band:SetBorderColor(F.RimColor()) end
-	local m = F.modules and F.modules.enemy
-	if m and m.Update then m:Update() end
-end
-
-local MODULE_NAMES = { "enemy", "cast", "alerts" }
-
 local defaults = {
 	tank = false,
-	frameStyle = "bronze",
 	scale = 1,
 	scales = {},
 	modules = { enemy = true, cast = true, alerts = true },
@@ -319,8 +120,8 @@ local function Merge(dst, src)
 	end
 end
 
-function F.Print(msg)
-	print("|cff66ccffFray|r: " .. tostring(msg))
+function F.Print(...)
+	print("|cffffd100" .. L.TITLE .. ":|r", ...)
 end
 
 ------------------------------------------------------------------------
@@ -360,19 +161,6 @@ end
 ------------------------------------------------------------------------
 -- Small UI helpers
 ------------------------------------------------------------------------
-function F.Short(n)
-	n = n or 0
-	if n >= 1e6 then return string.format("%.1fm", n / 1e6) end
-	if n >= 1e4 then return string.format("%.1fk", n / 1e3) end
-	return tostring(math.floor(n + 0.5))
-end
-
-function F.FormatTime(s)
-	if s >= 60 then return string.format("%dm", math.floor(s / 60)) end
-	if s >= 10 then return string.format("%d", math.floor(s)) end
-	return string.format("%.1f", s)
-end
-
 function F.CreateText(parent, size, justify, layer)
 	local fs = parent:CreateFontString(nil, layer or "OVERLAY")
 	fs:SetFont(F.FONT, size or 11, "")
@@ -383,149 +171,7 @@ function F.CreateText(parent, size, justify, layer)
 	return fs
 end
 
--- Glowing halo around a rectangle (9-slice from Glow.tga, additive): like the yellow selection of nameplates.
--- fadeLeft: pixels over which the halo fades in from nothing on the left (instead of a cap), so there is no
--- hard edge where an emblem sits on top on the left.
-function F.CreateGlow(frame, fadeLeft)
-	local path = F.TEXROOT .. "Glow.tga"
-	local c, inset = 32, 22   -- Glow.tga: 96x96, corners 32 px, corner radius 8 like the plate
-	local u = c / 96
-	local all, fades = {}, {}
-	local function tex(l, r, t, b)
-		local x = frame:CreateTexture(nil, "BACKGROUND", nil, -8)
-		x:SetTexture(path)
-		x:SetTexCoord(l, r, t, b)
-		x:SetBlendMode("ADD")
-		all[#all + 1] = x
-		return x
-	end
-	local tr, br = tex(1 - u, 1, 0, u), tex(1 - u, 1, 1 - u, 1)
-	local right = tex(1 - u, 1, u, 1 - u)
-	local top, bottom = tex(u, 1 - u, 0, u), tex(u, 1 - u, 1 - u, 1)
-	for _, x in ipairs({ tr, br }) do x:SetSize(c, c) end
-	tr:SetPoint("TOPRIGHT", frame, "TOPRIGHT", inset, inset)
-	br:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", inset, -inset)
-	right:SetPoint("TOPLEFT", tr, "BOTTOMLEFT"); right:SetPoint("BOTTOMRIGHT", br, "TOPRIGHT")
-	if fadeLeft then
-		local tf, bf = tex(u, 1 - u, 0, u), tex(u, 1 - u, 1 - u, 1)
-		tf:SetSize(fadeLeft, c); tf:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, inset)
-		bf:SetSize(fadeLeft, c); bf:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, -inset)
-		fades[1], fades[2] = tf, bf
-		top:SetPoint("TOPLEFT", tf, "TOPRIGHT"); top:SetPoint("BOTTOMRIGHT", tr, "BOTTOMLEFT")
-		bottom:SetPoint("TOPLEFT", bf, "TOPRIGHT"); bottom:SetPoint("BOTTOMRIGHT", br, "BOTTOMLEFT")
-	else
-		local tl, bl = tex(0, u, 0, u), tex(0, u, 1 - u, 1)
-		local left = tex(0, u, u, 1 - u)
-		for _, x in ipairs({ tl, bl }) do x:SetSize(c, c) end
-		tl:SetPoint("TOPLEFT", frame, "TOPLEFT", -inset, inset)
-		bl:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", -inset, -inset)
-		top:SetPoint("TOPLEFT", tl, "TOPRIGHT"); top:SetPoint("BOTTOMRIGHT", tr, "BOTTOMLEFT")
-		bottom:SetPoint("TOPLEFT", bl, "TOPRIGHT"); bottom:SetPoint("BOTTOMRIGHT", br, "BOTTOMLEFT")
-		left:SetPoint("TOPLEFT", tl, "BOTTOMLEFT"); left:SetPoint("BOTTOMRIGHT", bl, "TOPRIGHT")
-	end
-	local glow = { color = { 1, 0.8, 0.22 } }
-	function glow:SetColor(r, g, b, a)
-		self.color = { r, g, b }
-		for _, x in ipairs(all) do x:SetVertexColor(r, g, b, a or 1) end
-		-- the fade-in pieces: gradient from transparent to full
-		if CreateColor then
-			for _, x in ipairs(fades) do
-				pcall(x.SetGradient, x, "HORIZONTAL", CreateColor(r, g, b, 0), CreateColor(r, g, b, a or 1))
-			end
-		end
-	end
-	function glow:SetShown(on)
-		for _, x in ipairs(all) do if on then x:Show() else x:Hide() end end
-	end
-	glow:SetColor(1, 0.92, 0.18, 1)
-	glow:SetShown(false)
-	return glow
-end
-
--- Rounded dark brown plate with a bronze frame (3-slice from Plate-*.tga).
--- Sits at (x0, -y0) with size w x h in the parent. SetBorderColor tints the frame,
--- SetGlow shows shimmer and glow halo (selected).
-function F.CreateBand(parent, x0, y0, w, h, fadeLeft)
-	local band = {}
-	local holder = CreateFrame("Frame", nil, parent)
-	holder:SetPoint("TOPLEFT", parent, "TOPLEFT", x0, -y0)
-	holder:SetSize(w, h)
-	holder:SetFrameLevel(parent:GetFrameLevel())
-	band.frame = holder
-
-	local cap = 12
-	local function build(file, layer, sub)
-		local path = F.TEXROOT .. file
-		local function tex()
-			local t = holder:CreateTexture(nil, layer, nil, sub or 0)
-			t:SetTexture(path)
-			return t
-		end
-		local l, r, m = tex(), tex(), tex()
-		l:SetTexCoord(0, cap / 128, 0, 1); l:SetSize(cap, h); l:SetPoint("TOPLEFT")
-		r:SetTexCoord(1 - cap / 128, 1, 0, 1); r:SetSize(cap, h); r:SetPoint("TOPRIGHT")
-		m:SetTexCoord(cap / 128, 1 - cap / 128, 0, 1)
-		m:SetPoint("TOPLEFT", l, "TOPRIGHT"); m:SetPoint("BOTTOMRIGHT", r, "BOTTOMLEFT")
-		return { l, m, r }
-	end
-	band.halo = F.CreateGlow(holder, fadeLeft)
-	band.fill = build("Plate-Fill.tga", "BACKGROUND", 0)
-	band.glow = build("Plate-Glow.tga", "BORDER", 0)
-	band.border = build("Plate-Border.tga", "ARTWORK", 3)
-	for _, t in ipairs(band.glow) do
-		t:SetVertexColor(1, 0.8, 0.25, 0.14)
-		t:Hide()
-	end
-	local function tint(r, g, b)
-		for _, t in ipairs(band.border) do t:SetVertexColor(r, g, b) end
-	end
-	tint(F.RimColor())
-	F.bands[#F.bands + 1] = band
-	function band:SetBorderColor(r, g, b) tint(r, g, b) end
-	function band:SetGlow(on)
-		for _, t in ipairs(self.glow) do
-			if on then t:Show() else t:Hide() end
-		end
-		self.halo:SetShown(on)
-	end
-	function band:SetSize(nw, nh) holder:SetSize(nw, nh) end
-	return band
-end
-
--- Bar: dark background + bar texture (colour via SetStatusBarColor), thin dark edge.
--- style: nil = pill (round at both ends); "top"/"bottom" = straight on the left, rounded top/bottom right
--- (runs under the shield and sits flush in the corners of the plate).
-function F.CreateSlimBar(parent, w, h, style)
-	local tex = style == "top" and (F.TEXROOT .. "BarTop.tga") or style == "bottom" and (F.TEXROOT .. "BarBottom.tga")
-		or style == "right" and (F.TEXROOT .. "BarRight.tga") or style == "full" and (F.TEXROOT .. "BarFull.tga") or F.BAR_TEX
-	local bar = CreateFrame("StatusBar", nil, parent)
-	bar:SetSize(w, h)
-	bar:SetStatusBarTexture(tex)
-	bar:SetMinMaxValues(0, 1)
-	bar:SetValue(0)
-	bar.bg = bar:CreateTexture(nil, "BACKGROUND")
-	bar.bg:SetAllPoints()
-	bar.bg:SetTexture(tex)
-	bar.bg:SetVertexColor(0, 0, 0, 0.3)   -- only darken slightly: the plate should show through, no hard edge
-	-- Inner drop shadow: light comes from above. Thin, strong strip at the top edge (3 px),
-	-- fading downwards; 3 px free on the right so it does not reach into the round corner.
-	bar.shade = bar:CreateTexture(nil, "OVERLAY", nil, 1)
-	bar.shade:SetTexture(F.WHITE)
-	bar.shade:SetPoint("TOPLEFT", bar, "TOPLEFT", 0, 0)
-	bar.shade:SetPoint("TOPRIGHT", bar, "TOPRIGHT", -3, 0)
-	bar.shade:SetHeight(3)
-	if CreateColor and bar.shade.SetGradient then
-		pcall(bar.shade.SetGradient, bar.shade, "VERTICAL", CreateColor(0, 0, 0, 0), CreateColor(0, 0, 0, 0.85))
-	elseif bar.shade.SetGradientAlpha then
-		bar.shade:SetGradientAlpha("VERTICAL", 0, 0, 0, 0, 0, 0, 0, 0.85)
-	else
-		bar.shade:SetVertexColor(0, 0, 0, 0.4)
-	end
-	return bar
-end
-
-F.CreateBar = F.CreateSlimBar
-
+-- Thin line border from plain colour (no texture file).
 function F.CreateBorder(frame, size, layer)
 	local b = {}
 	local edges = {}
@@ -548,19 +194,11 @@ function F.CreateBorder(frame, size, layer)
 	return b
 end
 
-function F.ClassColor(unit)
-	local _, class = UnitClass(unit)
-	local c = class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[class]
-	if c then return c.r, c.g, c.b end
-	return 0.6, 0.6, 0.6
-end
-
 ------------------------------------------------------------------------
 -- Threat / enemies
 ------------------------------------------------------------------------
 function F.InGroup()
-	if IsInGroup then return IsInGroup() and true or false end
-	return (GetNumPartyMembers and GetNumPartyMembers() or 0) > 0
+	return IsInGroup() and true or false
 end
 
 local STATUS_PCT = { [0] = 20, [1] = 70, [2] = 95, [3] = 100 }
@@ -611,7 +249,7 @@ function F.SetPercentText(fs, unit)
 	end
 	local cur, max = UnitHealth(unit), UnitHealthMax(unit)
 	if F.AllReadable(cur, max) and type(cur) == "number" and type(max) == "number" and max > 0 then
-		fs:SetText(string.format("%d%%", cur / max * 100 + 0.5))
+		fs:SetText(string.format("%d%%", math.floor(cur / max * 100 + 0.5)))
 	else
 		fs:SetText("")
 	end
@@ -749,13 +387,13 @@ end
 
 -- Delete all settings; the defaults apply again on the next load
 function F.ResetAll()
-	if InCombatLockdown() then F.Print("Not possible in combat.") return end
+	if InCombatLockdown() then F.Print(L.NOT_IN_COMBAT) return end
 	for k in pairs(F.db) do F.db[k] = nil end
 	ReloadUI()
 end
 
 function F.ApplyScale()
-	if InCombatLockdown() then F.Print("Not possible in combat.") return end
+	if InCombatLockdown() then F.Print(L.NOT_IN_COMBAT) return end
 	for _, m in ipairs(F.movables) do
 		Place(m.frame, m)
 		local ov = m.overlay
@@ -882,7 +520,7 @@ end
 
 function F:SetLocked(locked)
 	if not locked and InCombatLockdown() then
-		F.Print("Not possible in combat.")
+		F.Print(L.NOT_IN_COMBAT)
 		return
 	end
 	F.unlocked = not locked
@@ -904,17 +542,17 @@ function F:SetLocked(locked)
 	end
 	F:UpdateGrid()
 	if F.unlocked then
-		F.Print("Frames unlocked - drag to move" .. (F.db.grid.enabled and " (grid on, hold Alt for free placement)" or "") .. ", then /fray lock.")
+		F.Print(F.db.grid.enabled and L.UNLOCKED_GRID or L.UNLOCKED)
 	else
-		F.Print("Frames locked.")
+		F.Print(L.LOCKED)
 	end
 end
 
 function F:ResetPositions()
-	if InCombatLockdown() then F.Print("Not possible in combat.") return end
+	if InCombatLockdown() then F.Print(L.NOT_IN_COMBAT) return end
 	wipe(F.db.pos)
 	for _, m in ipairs(F.movables) do Place(m.frame, m) end
-	F.Print("Positions reset.")
+	F.Print(L.POSITIONS_RESET)
 end
 
 F:On("PLAYER_REGEN_DISABLED", function()
@@ -924,7 +562,7 @@ F:On("PLAYER_REGEN_DISABLED", function()
 		end
 		F.unlocked = false
 		F:UpdateGrid()
-		F.Print("Combat: frames were locked.")
+		F.Print(L.COMBAT_LOCKED)
 	end
 end)
 
@@ -939,7 +577,9 @@ boot:SetScript("OnEvent", function(_, event, arg1)
 		FRAYDB = FRAYDB or {}
 		Merge(FRAYDB, defaults)
 		-- one-time: the new default sort order is pull order
-		if FRAYDB.enemy and not FRAYDB.sortMigrated then FRAYDB.sortMigrated = true; FRAYDB.enemy.sort = "pull" end
+		if not FRAYDB.sortMigrated then FRAYDB.sortMigrated = true; FRAYDB.enemy.sort = "pull" end
+		-- 1.2.0: Blizzard art only, the frame colour option is gone.
+		FRAYDB.frameStyle = nil
 		F.db = FRAYDB
 	elseif event == "PLAYER_LOGIN" then
 		for _, name in ipairs(F.order) do
@@ -948,169 +588,91 @@ boot:SetScript("OnEvent", function(_, event, arg1)
 				if m.Init then m:Init() end
 				if m.SetEnabled then m:SetEnabled(F:IsEnabled(name)) end
 			end)
-			if not ok then F.Print("Error in module '" .. name .. "': " .. tostring(err)) end
+			if not ok then geterrorhandler()(err) end
 		end
 		F.ready = true
-		F.Print("v" .. F.version .. " loaded. Type /fray for options.")
 	end
 end)
 
 
 ------------------------------------------------------------------------
--- Diagnostics for other clients (e.g. Forever): shows which functions exist and which values the
--- client makes "secret". /fray probe - best run once out of combat and once in combat.
+-- Test mode: placeholder enemy list and a test alert
 ------------------------------------------------------------------------
-local function Val(v)
-	if v == nil then return "nil" end
-	if canaccessvalue and not canaccessvalue(v) then return "SECRET" end
-	if type(v) == "number" then return string.format("%.2f", v) end
-	return tostring(v)
+function F.StartTest()
+	local alerts = F.modules.alerts
+	if alerts and alerts.Alert and F:IsEnabled("alerts") then
+		alerts:Alert(L.ALERT_AGGRO, "%s", "red", "soundGain", L.TEST_ENEMY)
+	end
+	local enemy = F.modules.enemy
+	if enemy and enemy.StartDemo and F:IsEnabled("enemy") then enemy:StartDemo(20) end
+	F.Print(L.TEST_STARTED)
 end
 
-function F.Probe()
-	local function line(...) print("  " .. string.format(...)) end
-	local ver, build, _, toc = GetBuildInfo()
-	F.Print(string.format("Probe: version %s, build %s, interface %s, combat=%s, group=%s",
-		tostring(ver), tostring(build), tostring(toc), tostring(InCombatLockdown()), tostring(F.InGroup())))
-	local apis = {
-		"canaccessvalue", "issecretvalue", "UnitHealthPercent", "CurveConstants", "UnitCastingDuration",
-		"UnitDetailedThreatSituation", "UnitThreatSituation", "CombatLogGetCurrentEventInfo", "C_NamePlate",
-		"C_Timer", "C_Container", "C_Spell", "GetSpellCooldown", "SetPortraitTexture", "UnitGUID",
-	}
-	local have = {}
-	for _, n in ipairs(apis) do have[#have + 1] = n .. "=" .. (_G[n] ~= nil and "yes" or "NO") end
-	line("API: %s", table.concat(have, " "))
-	local units = { "player", "target", "nameplate1", "nameplate2", "nameplate3" }
-	for _, u in ipairs(units) do
-		if UnitExists(u) then
-			local function try(fn, ...)
-				if not fn then return "missing" end
-				local ok, a, b, c, d = pcall(fn, ...)
-				if not ok then return "ERROR" end
-				if select("#", ...) >= 0 and (b ~= nil or c ~= nil or d ~= nil) then
-					return Val(a) .. "/" .. Val(b) .. "/" .. Val(c) .. "/" .. Val(d)
-				end
-				return Val(a)
-			end
-			line("%s: name=%s hp=%s/%s guid=%s combat=%s enemy=%s me=%s",
-				u, try(UnitName, u), try(UnitHealth, u), try(UnitHealthMax, u), try(UnitGUID, u),
-				try(UnitAffectingCombat, u), try(UnitCanAttack, "player", u), try(UnitIsUnit, u, "player"))
-			if u ~= "player" then
-				line("   threat(%s)=%s  targeted-by=%s  cast=%s  raid marker=%s",
-					u, try(UnitDetailedThreatSituation, "player", u), try(UnitExists, u .. "target"),
-					try(UnitCastingInfo, u), try(GetRaidTargetIndex, u))
-				if UnitHealthPercent then
-					line("   hp percent=%s", try(UnitHealthPercent, u, true, CurveConstants and CurveConstants.ScaleTo100))
-				end
-			end
-		end
-	end
-	if C_NamePlate and C_NamePlate.GetNamePlates then
-		local ok, plates = pcall(C_NamePlate.GetNamePlates)
-		line("Nameplate list: %s", ok and tostring(#plates) or "ERROR")
-	end
-	F.Print("Probe done. Please copy the chat text (once out of combat and once in combat) for bug reports.")
-end
-
-------------------------------------------------------------------------
--- Slash commands
-------------------------------------------------------------------------
-local function ToggleOption(tbl, key, label)
-	tbl[key] = not tbl[key]
-	F.Print(label .. ": " .. (tbl[key] and "on" or "off"))
+function F.OpenOptions()
 	local o = F.modules.options
-	if o and o.Refresh then o:Refresh() end
+	if o and o.Open then o:Open() end
 end
+
+------------------------------------------------------------------------
+-- Slash commands (same layout as SquareMap: no argument opens the options, "help" lists the rest)
+------------------------------------------------------------------------
+local COMMANDS = {
+	{ "", L.CMD_OPTIONS },
+	{ "unlock | lock", L.CMD_UNLOCK },
+	{ "test", L.CMD_TEST },
+	{ "plates", L.CMD_PLATES },
+	{ "reset", L.CMD_RESET },
+}
 
 local function Help()
-	F.Print("Commands:")
-	print("  /fray unlock | lock       - Move frames")
-	print("  /fray grid [on|off|<px>]  - Snap grid while moving (no argument toggles, Alt = free)")
-	print("  /fray reset               - Reset positions")
-	print("  /fray toggle <module>     - Enable/disable a module (" .. table.concat(MODULE_NAMES, ", ") .. ")")
-	print("  /fray tank                - Tank mode (inverts threat colours and alerts)")
-	print("  /fray all                 - Enemy list: show all hostile units, not only those in combat")
-	print("  /fray plates              - Enable enemy nameplates")
-	print("  /fray opt <name>          - Toggle an option: lowhp, onlyhostile, hidegroup")
-	print("  /fray test                - Show test display")
+	F.Print(L.HELP_TITLE)
+	for _, c in ipairs(COMMANDS) do
+		print(("  |cffffd100/fray%s|r - %s"):format(c[1] ~= "" and " " .. c[1] or "", c[2]))
+	end
 end
 
 SLASH_FRAY1 = "/fray"
-SlashCmdList["FRAY"] = function(msg)
+SlashCmdList.FRAY = function(msg)
 	if not F.db then return end
-	local cmd, rest = (msg or ""):match("^(%S*)%s*(.-)$")
-	cmd = cmd:lower()
-	if cmd == "" or cmd == "config" or cmd == "optionen" then
-		local o = F.modules.options
-		if o and o.Toggle then o:Toggle() end
+	local cmd = strtrim(msg or ""):match("^(%S*)")
+	cmd = (cmd or ""):lower()
+	if cmd == "" or cmd == "options" or cmd == "config" then
+		F.OpenOptions()
 	elseif cmd == "unlock" then
 		F:SetLocked(false)
 	elseif cmd == "lock" then
 		F:SetLocked(true)
-	elseif cmd == "grid" then
-		local arg = rest:lower()
-		local g = F.db.grid
-		local n = tonumber(arg)
-		if n then
-			g.size = math.max(8, math.min(100, math.floor(n)))
-			g.enabled = true
-		elseif arg == "on" then
-			g.enabled = true
-		elseif arg == "off" then
-			g.enabled = false
-		else
-			g.enabled = not g.enabled
-		end
-		F.Print("Grid: " .. (g.enabled and ("on, " .. g.size .. " px") or "off"))
-		F:UpdateGrid()
-	elseif cmd == "reset" then
-		F:ResetPositions()
-	elseif cmd == "tank" then
-		ToggleOption(F.db, "tank", "Tank mode")
-	elseif cmd == "all" then
-		ToggleOption(F.db.enemy, "showAll", "Show all hostile units")
+	elseif cmd == "test" then
+		F.StartTest()
 	elseif cmd == "plates" then
-		if InCombatLockdown() then F.Print("Not possible in combat.") return end
+		if InCombatLockdown() then F.Print(L.NOT_IN_COMBAT) return end
 		SetCVar("nameplateShowEnemies", 1)
 		pcall(SetCVar, "nameplateMaxDistance", 60)   -- enemies stay listed until they are this far away
-		F.Print("Enemy nameplates enabled.")
-	elseif cmd == "toggle" then
-		local name = rest:lower()
-		if F.db.modules[name] == nil then
-			F.Print("Unknown module. Available: " .. table.concat(MODULE_NAMES, ", "))
-		elseif InCombatLockdown() then
-			F.Print("Not possible in combat.")
-		else
-			F.db.modules[name] = not F.db.modules[name]
-			local m = F.modules[name]
-			if m and m.SetEnabled then m:SetEnabled(F.db.modules[name]) end
-			F.Print(name .. ": " .. (F.db.modules[name] and "on" or "off"))
-		end
-	elseif cmd == "opt" then
-		local o = rest:lower()
-		if o == "lowhp" then ToggleOption(F.db.alerts, "lowHealth", "Low health alert")
-		elseif o == "onlyhostile" then ToggleOption(F.db.cast, "onlyHostile", "Cast bars for enemies only")
-		elseif o == "hidegroup" then
-			F.db.cast.hideGroup = F.db.cast.hideGroup ~= false
-			ToggleOption(F.db.cast, "hideGroup", "Hide cast bars of your group")
-		else Help() end
-	elseif cmd == "atlas" then
-		F.AtlasReport()
-	elseif cmd == "probe" then
-		F.Probe()
-	elseif cmd == "debug" then
-		local m = F.modules.enemy
-		if m and m.Debug then m:Debug() end
-	elseif cmd == "test" then
-		if F.modules.alerts and F.modules.alerts.Alert then
-			F.modules.alerts:Alert("Aggro!", "%s", "red", "soundGain", "Test enemy")
-		end
-		for _, name in ipairs({ "enemy" }) do
-			local m = F.modules[name]
-			if m and m.StartDemo and F:IsEnabled(name) then m:StartDemo(20) end
-		end
-		F.Print("Test mode: placeholder lists for 20 seconds.")
+		F.Print(L.PLATES_ON)
+	elseif cmd == "reset" then
+		StaticPopup_Show("FRAY_RESET_ALL")
 	else
 		Help()
 	end
+end
+
+-- Addon compartment entry (## AddonCompartmentFunc in the TOC), like SquareMap's
+function Fray_OnAddonCompartmentClick(addonName, mouseButton)
+	if mouseButton == "RightButton" then
+		F:SetLocked(F.unlocked)
+	else
+		F.OpenOptions()
+	end
+end
+
+function Fray_OnAddonCompartmentEnter(addonName, menuButton)
+	GameTooltip:SetOwner(menuButton, "ANCHOR_LEFT")
+	GameTooltip_SetTitle(GameTooltip, L.TITLE)
+	GameTooltip:AddLine(L.TT_LEFT, 1, 1, 1)
+	GameTooltip:AddLine(L.TT_RIGHT, 1, 1, 1)
+	GameTooltip:Show()
+end
+
+function Fray_OnAddonCompartmentLeave()
+	GameTooltip:Hide()
 end
