@@ -11,6 +11,8 @@
 - Enemies out of sight keep their last known health instead of an empty bar.
 - The enemy list frame and its mover are only as large as the rows that can be shown.
 - Cast bars like Blizzard's: an interrupted cast turns red with "Interrupted", and bars fade out at the end. The cast strip in the enemy list shows channels and casts that cannot be interrupted in Blizzard's colours.
+- Fixed: a few values leaked into global variables.
+- Code checks (luacheck) run on every push, and pushing a version tag builds the release zip.
 - Alerts: two banners, so a new alert no longer wipes one that is still showing. Sounds use Blizzard's sound kits. Low health and high threat say once per session when the client hides the numbers they need, instead of silently never firing.
 
 ## 1.2.2 - 2026-11-25

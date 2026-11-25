@@ -406,10 +406,8 @@ end
 F.SHARED = "Default"
 
 function F.CharKey()
-	local name, realm = UnitFullName and UnitFullName("player")
-	name = name or UnitName("player") or "?"
-	realm = (realm and realm ~= "") and realm or GetRealmName() or "?"
-	return name .. "-" .. realm
+	-- GetRealmName is ready at load time (UnitFullName may not be yet), so keys stay the same every session.
+	return (UnitName("player") or "?") .. "-" .. (GetRealmName() or "?")
 end
 
 -- Switch this character between the shared profile and its own one (a copy of the shared one). Needs a reload.

@@ -157,7 +157,7 @@ local function Poll(f)
 
 	local channel = false
 	local n = select("#", UnitCastingInfo(unit))
-	local name, tex, startMS, endMS, notInt
+	local name, tex, startMS, endMS, notInt, _
 	if n > 0 then
 		name, _, tex, startMS, endMS, _, _, notInt = UnitCastingInfo(unit)
 	else

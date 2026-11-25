@@ -95,6 +95,8 @@ local function AddBarMask(row, bar)
 	return mask
 end
 
+local CreateAuras   -- defined with the other aura code below
+
 local function CreateRow(index)
 	local row = CreateFrame("Button", "FrayEnemyRow" .. index, M.frame)
 	row:SetSize(ROW_W, ROW_H)
@@ -395,7 +397,7 @@ end
 
 -- Your own debuffs on the enemy, like the target frame: icon, Blizzard's debuff border, stacks and the
 -- running time as a cooldown swipe. Values the client hides in combat are passed on as they are.
-local function CreateAuras(row)
+function CreateAuras(row)
 	row.auras = {}
 	for i = 1, MAX_AURAS do
 		local a = CreateFrame("Frame", nil, row)
@@ -488,7 +490,7 @@ end
 local function UpdateCast(row, unit)
 	local n = select("#", UnitCastingInfo(unit))
 	local channel = false
-	local name, startMS, endMS, notInt
+	local name, startMS, endMS, notInt, _
 	if n > 0 then
 		name, _, _, startMS, endMS, _, _, notInt = UnitCastingInfo(unit)
 	else
