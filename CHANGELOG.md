@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.3.0 - 2026-11-25
+
+- Fixed: enemies were missing when there were many nameplates around. Only the first 12 nameplate slots were read, but the game hands them out in no particular order; now all of them are.
+- New: boss frames (boss1 to boss5) and, in a raid, the targets of all raid members count as enemies too.
+- Role per character: "Automatic" (tank by group role, specialisation, bear form or defensive stance), "Tank" or "Damage or healer". The old account-wide tank switch goes to the first character that logs in.
+- Profiles: "Own settings for this character" gives a character its own copy of the settings; otherwise all characters share them.
+- New: your own debuffs on every enemy (up to four, right of its frame), with Blizzard's debuff border, stacks and remaining time.
+- New: heading "Enemies: 5" above the list, and the enemy's tooltip on mouseover (clicks still go through to the world). Both can be switched off.
+- Enemies out of sight keep their last known health instead of an empty bar.
+- The enemy list frame and its mover are only as large as the rows that can be shown.
+- Cast bars like Blizzard's: an interrupted cast turns red with "Interrupted", and bars fade out at the end. The cast strip in the enemy list shows channels and casts that cannot be interrupted in Blizzard's colours.
+- Alerts: two banners, so a new alert no longer wipes one that is still showing. Sounds use Blizzard's sound kits. Low health and high threat say once per session when the client hides the numbers they need, instead of silently never firing.
+
 ## 1.2.2 - 2026-11-25
 
 - Tagline in the AddOn list: "Fray - Your Enemies, but listed".

@@ -14,23 +14,33 @@ local KINDS = {
 	green = { tex = "Shield-Green", 0.62, 0.95, 0.66 },
 }
 
--- Alert sounds (client files); "off" = no sound
+-- Alert sounds: Blizzard's sound kits (the file path only where the client lacks the kit); "off" = no sound
+local KIT = SOUNDKIT or {}
 local SOUNDS = {
 	{ key = "off", label = L.SND_OFF },
-	{ key = "raid", label = L.SND_RAID, file = "Sound\\Interface\\RaidWarning.ogg" },
-	{ key = "boss", label = L.SND_BOSS, file = "Sound\\Interface\\RaidBossEmoteWarning.ogg" },
-	{ key = "ready", label = L.SND_READY, file = "Sound\\Interface\\ReadyCheck.ogg" },
-	{ key = "alarm", label = L.SND_ALARM, file = "Sound\\Interface\\AlarmClockWarning3.ogg" },
+	{ key = "raid", label = L.SND_RAID, kit = KIT.RAID_WARNING, file = "Sound\\Interface\\RaidWarning.ogg" },
+	{ key = "boss", label = L.SND_BOSS, kit = KIT.RAID_BOSS_EMOTE_WARNING, file = "Sound\\Interface\\RaidBossEmoteWarning.ogg" },
+	{ key = "ready", label = L.SND_READY, kit = KIT.READY_CHECK, file = "Sound\\Interface\\ReadyCheck.ogg" },
+	{ key = "alarm", label = L.SND_ALARM, kit = KIT.ALARM_CLOCK_WARNING_3, file = "Sound\\Interface\\AlarmClockWarning3.ogg" },
 }
 M.SOUNDS = SOUNDS
 
 function M.PlaySound(key)
 	for _, snd in ipairs(SOUNDS) do
-		if snd.key == key and snd.file then
-			pcall(PlaySoundFile, snd.file, "Master")
+		if snd.key == key then
+			if snd.kit and pcall(PlaySound, snd.kit, "Master") then return end
+			if snd.file then pcall(PlaySoundFile, snd.file, "Master") end
 			return
 		end
 	end
+end
+
+-- Alerts that need numbers the client hides in combat say so once per session, instead of silently never firing.
+local told = {}
+local function TellLimited(key, text)
+	if told[key] then return end
+	told[key] = true
+	F.Print(text)
 end
 
 -- Banner like Blizzard's boss warnings: status shield, large coloured title with a thick outline, subtitle below,
@@ -40,6 +50,15 @@ end
 function M:Alert(title, sub, kind, soundOpt, ...)
 	local f = M.frame
 	if not f then return end
+	-- Two banners: a new alert never wipes one that is still showing; it takes the free banner, or the
+	-- older one when both are busy.
+	local second = M.second
+	if f:IsShown() then
+		if not second:IsShown() or (second.start or 0) < (f.start or 0) then
+			f = second
+		end
+	end
+	if f == second then second:SetScale(M.frame:GetScale()) end
 	local o = F.db.alerts
 	local color = KINDS[kind] or KINDS.red
 	local size = o.textSize or 24
@@ -72,6 +91,7 @@ function M:Scan()
 	-- Low health alert only if health is readable (on Forever it usually is not)
 	if o.lowHealth and inCombat and not F.Bool(UnitIsDeadOrGhost("player")) then
 		local cur, max = UnitHealth("player"), UnitHealthMax("player")
+		if not F.AllReadable(cur, max) then TellLimited("low", L.LIMITED_LOW) end
 		if F.AllReadable(cur, max) and type(cur) == "number" and type(max) == "number" and max > 0
 			and cur / max < (o.lowHealthPct or 25) / 100 and now - lastLowHP > 10 then
 			lastLowHP = now
@@ -99,7 +119,7 @@ function M:Scan()
 				local hasTarget = F.Bool(UnitExists(tt))
 				if tanking and not was then
 					-- Aggro gained (normally wanted by tanks, hence switchable)
-					if o.gain and (not F.db.tank or o.gainTank) and Cooldown(guid .. "g", pause) then
+					if o.gain and (not F.IsTank() or o.gainTank) and Cooldown(guid .. "g", pause) then
 						M:Alert(L.ALERT_AGGRO, "%s", "red", "soundGain", UnitName(unit))
 					end
 				elseif was and not tanking then
@@ -111,12 +131,13 @@ function M:Scan()
 							M:Alert(L.ALERT_LOST, "%s", "orange", "soundLoss", UnitName(unit))
 						end
 					end
-				elseif F.db.tank and o.tankWarn and not tanking and hasTarget and F.Bool(UnitIsPlayer(tt))
+				elseif F.IsTank() and o.tankWarn and not tanking and hasTarget and F.Bool(UnitIsPlayer(tt))
 					and not F.Bool(UnitIsUnit(tt, "player")) and F.Bool(UnitAffectingCombat(unit))
 					and Cooldown(guid .. "t", 6) then
 					-- Tank: an enemy attacks a party member (it never was on you)
 					M:Alert(L.ALERT_TANK, "%s  >  %s", "orange", "soundLoss", UnitName(unit), UnitName(tt))
 				end
+				if o.threatHigh and not known and F.Bool(UnitAffectingCombat(unit)) then TellLimited("threat", L.LIMITED_THREAT) end
 				if o.threatHigh and known and not tanking and pct >= (o.threatPct or 90) and Cooldown(guid .. "h", pause) then
 					M:Alert(L.ALERT_HIGH, "%s  (%d%%)", "orange", "soundThreat", UnitName(unit), pct)
 				end
@@ -126,8 +147,8 @@ function M:Scan()
 	state = newState
 end
 
-function M:Init()
-	local f = CreateFrame("Frame", "FrayAlert", UIParent)
+local function CreateBanner(name)
+	local f = CreateFrame("Frame", name, UIParent)
 	f:SetSize(520, 130)
 	f:SetFrameStrata("HIGH")
 	f:Hide()
@@ -174,8 +195,17 @@ function M:Init()
 		self:SetAlpha(a)
 		self.inner:SetScale(s)
 	end)
+	return f
+end
+
+function M:Init()
+	local f = CreateBanner("FrayAlert")
 	M.frame = f
 	F:MakeMovable(f, "alert", L.FRAME_ALERT, 0, 200)
+	-- second banner right below the first
+	local second = CreateBanner("FrayAlert2")
+	second:SetPoint("TOP", f, "BOTTOM", 0, 14)
+	M.second = second
 
 	local d = CreateFrame("Frame")
 	d.t = 0
@@ -192,6 +222,7 @@ function M:SetEnabled(on)
 	M.driver:SetShown(on)
 	if not on then
 		M.frame:Hide()
+		M.second:Hide()
 		wipe(state)
 	end
 end

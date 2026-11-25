@@ -8,10 +8,15 @@ F:RegisterModule("enemy", M)
 -- The rows are normal (non-secure) frames: they are sorted live by threat in combat and
 -- close up without gaps. There is deliberately no click-to-target: secure code does not know
 -- nameplate units and cannot be re-arranged in combat (other addons do not solve this either).
-local TOKENS = 12             -- nameplate1..12
-local EXTRA = 6               -- extra slots for enemies without a nameplate (target, focus, group targets)
-local MAX_ROWS = TOKENS + EXTRA
+-- Nameplate tokens are not handed out in order: with many plates around (cities, friendly players, big pulls)
+-- an enemy can sit on nameplate30, so all of them are scanned.
+local PLATES = 40
+local MAX_ROWS = 18
 local COLGAP = 8
+local MAX_AURAS, AURA_SIZE, AURA_GAP = 4, 17, 2   -- your debuffs right of each frame
+local function AuraWidth()
+	return F.db.enemy.showDebuffs ~= false and (MAX_AURAS * (AURA_SIZE + AURA_GAP) + 2) or 0
+end
 local function PerCol() return F.db.enemy.perCol or 6 end   -- after that another column starts
 
 -- Geometry of Blizzard's target frame art, scaled by S
@@ -214,6 +219,19 @@ local function CreateRow(index)
 	row.dragon:SetPoint("CENTER", row.portrait, "TOPLEFT", -2 * S, -2.5 * S)
 	row.dragon:Hide()
 
+	-- Unit tooltip on mouseover. Clicks go through to the world (the frames cannot target anyway).
+	if row.SetMouseClickEnabled then
+		row:SetMouseClickEnabled(false)
+		row:SetMouseMotionEnabled(true)
+		row:SetScript("OnEnter", function(self)
+			if F.db.enemy.tooltip == false or not self.unit or not F.Bool(UnitExists(self.unit)) then return end
+			GameTooltip_SetDefaultAnchor(GameTooltip, self)
+			GameTooltip:SetUnit(self.unit)
+			GameTooltip:Show()
+		end)
+		row:SetScript("OnLeave", GameTooltip_Hide)
+	end
+	CreateAuras(row)
 	row:Hide()
 	return row
 end
@@ -375,13 +393,85 @@ local function SetName(row, name)
 	row.name:SetFormattedText("%s", name)      -- also for secret names
 end
 
+-- Your own debuffs on the enemy, like the target frame: icon, Blizzard's debuff border, stacks and the
+-- running time as a cooldown swipe. Values the client hides in combat are passed on as they are.
+local function CreateAuras(row)
+	row.auras = {}
+	for i = 1, MAX_AURAS do
+		local a = CreateFrame("Frame", nil, row)
+		a:SetSize(AURA_SIZE, AURA_SIZE)
+		a:SetPoint("LEFT", row, "TOPLEFT", ROW_W + 2 + (i - 1) * (AURA_SIZE + AURA_GAP), -51 * S)
+		a.icon = a:CreateTexture(nil, "ARTWORK")
+		a.icon:SetAllPoints()
+		a.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+		a.cd = CreateFrame("Cooldown", nil, a, "CooldownFrameTemplate")
+		a.cd:SetAllPoints()
+		a.cd:SetReverse(true)
+		a.cd:SetDrawEdge(false)
+		if a.cd.SetHideCountdownNumbers then a.cd:SetHideCountdownNumbers(true) end
+		local over = CreateFrame("Frame", nil, a)
+		over:SetAllPoints()
+		over:SetFrameLevel(a.cd:GetFrameLevel() + 1)
+		a.border = over:CreateTexture(nil, "OVERLAY")
+		a.border:SetTexture("Interface\\Buttons\\UI-Debuff-Overlays")
+		a.border:SetTexCoord(0.296875, 0.5703125, 0, 0.515625)
+		a.border:SetPoint("TOPLEFT", -1, 1)
+		a.border:SetPoint("BOTTOMRIGHT", 1, -1)
+		local c = DebuffTypeColor and DebuffTypeColor.none
+		if c then a.border:SetVertexColor(c.r, c.g, c.b) else a.border:SetVertexColor(0.8, 0, 0) end
+		a.count = over:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
+		a.count:SetPoint("BOTTOMRIGHT", 2, -1)
+		a:Hide()
+		row.auras[i] = a
+	end
+end
+
+local function HideAuras(row)
+	for i = 1, MAX_AURAS do row.auras[i]:Hide() end
+end
+
+local function UpdateAuras(row, unit)
+	local shown = 0
+	if F.db.enemy.showDebuffs ~= false and C_UnitAuras and C_UnitAuras.GetAuraDataByIndex then
+		for i = 1, 40 do
+			if shown >= MAX_AURAS then break end
+			local ok, aura = pcall(C_UnitAuras.GetAuraDataByIndex, unit, i, "HARMFUL|PLAYER")
+			if not ok or not aura then break end
+			shown = shown + 1
+			local a = row.auras[shown]
+			pcall(a.icon.SetTexture, a.icon, aura.icon)
+			local apps = aura.applications
+			if F.Readable(apps) and type(apps) == "number" and apps > 1 then a.count:SetText(apps) else a.count:SetText("") end
+			local done = false
+			if C_UnitAuras.GetAuraDuration and a.cd.SetCooldownFromDurationObject and aura.auraInstanceID ~= nil then
+				done = pcall(function()
+					a.cd:SetCooldownFromDurationObject(C_UnitAuras.GetAuraDuration(unit, aura.auraInstanceID))
+				end)
+			end
+			if not done then
+				local d, e = aura.duration, aura.expirationTime
+				if F.AllReadable(d, e) and type(d) == "number" and type(e) == "number" and d > 0 then
+					if a.start ~= e - d then a.start = e - d; a.cd:SetCooldown(e - d, d) end
+				else
+					a.start = nil
+					a.cd:Clear()
+				end
+			end
+			a:Show()
+		end
+	end
+	for i = shown + 1, MAX_AURAS do row.auras[i]:Hide() end
+end
+
 local function FillCached(row, e)
 	local c = e.cache
 	row.unit = nil
 	row:SetAlpha(0.55)
 	SetName(row, c.name)
 	row.name:SetTextColor(0.8, 0.8, 0.8)
-	row.hp:SetValue(0)
+	-- last known health, as far as it was readable
+	row.hp:SetMinMaxValues(0, 1)
+	row.hp:SetValue(c.frac or 0)
 	row.cast:Hide()
 	row.power:Hide()
 	ClearPortrait(row)
@@ -390,6 +480,7 @@ local function FillCached(row, e)
 	SetStatus(row, "orange", true)
 	SetMark(row, c.mark)
 	SetSelected(row, false)
+	HideAuras(row)
 end
 
 -- Cast of the enemy: spell name in the strip, progress via the client's duration object (also with
@@ -397,13 +488,13 @@ end
 local function UpdateCast(row, unit)
 	local n = select("#", UnitCastingInfo(unit))
 	local channel = false
-	local name, startMS, endMS
+	local name, startMS, endMS, notInt
 	if n > 0 then
-		name, _, _, startMS, endMS = UnitCastingInfo(unit)
+		name, _, _, startMS, endMS, _, _, notInt = UnitCastingInfo(unit)
 	else
 		n = select("#", UnitChannelInfo(unit))
 		if n > 0 then
-			name, _, _, startMS, endMS = UnitChannelInfo(unit)
+			name, _, _, startMS, endMS, _, notInt = UnitChannelInfo(unit)
 			channel = true
 		end
 	end
@@ -411,6 +502,10 @@ local function UpdateCast(row, unit)
 		row.cast:Hide()
 		return
 	end
+	-- Fill like Blizzard's cast bar: standard, channel, or grey when it cannot be interrupted
+	local key = (F.Readable(notInt) and notInt == true and "castLocked") or (channel and "castChannel") or "castFill"
+	if not F.AtlasName(key) then key = "castFill" end
+	if row.castKey ~= key and F.AtlasName(key) then row.castKey = key; SetBarAtlas(row.cast, key) end
 	if UnitCastingDuration and row.cast.SetTimerDuration and Enum and Enum.StatusBarTimerDirection then
 		local duration
 		if channel then duration = UnitChannelDuration(unit) else duration = UnitCastingDuration(unit) end
@@ -450,11 +545,13 @@ local function FillRow(row, e)
 	F.SetPercentText(row.info, unit)
 	row.info:SetTextColor(0.9, 0.9, 0.9)
 	SetSelected(row, F.Bool(UnitIsUnit(unit, "target")))
+	UpdateAuras(row, unit)
 end
 
 -- Test mode (/fray test): placeholder enemies instead of real units.
 local DEMO_ENEMIES = {
-	{ name = "Aggro Boar", status = "red", frac = 0.79, mark = 8, selected = true, elite = true },
+	{ name = "Aggro Boar", status = "red", frac = 0.79, mark = 8, selected = true, elite = true,
+		debuff = "Interface\\Icons\\Spell_Shadow_ShadowWordPain" },
 	{ name = "Guard Dog", status = "orange", frac = 0.46, cast = "Shadow Bolt", castLen = 3 },
 	{ name = "Plague Servant", status = "orange", frac = 0.91, mark = 1, power = 0.65 },
 	{ name = "Sleeping Wolf", status = "green", frac = 1.0 },
@@ -496,9 +593,17 @@ local function FillDemo(row, d)
 	row.info:SetText(string.format("%d%%", math.floor(d.frac * 100 + 0.5)))
 	row.info:SetTextColor(0.9, 0.9, 0.9)
 	SetSelected(row, d.selected)
+	HideAuras(row)
+	if d.debuff and F.db.enemy.showDebuffs ~= false then
+		local a = row.auras[1]
+		a.icon:SetTexture(d.debuff)
+		a.count:SetText("")
+		a.cd:Clear()
+		a:Show()
+	end
 end
 
-local cacheTok = {}   -- nameplate -> last known values (for "out of sight")
+local cache = {}   -- guid -> last known values of an enemy seen on a nameplate (for "out of sight")
 local CACHE_SECS = 20
 local OUT_OF_RANGE_SECS = 45   -- without a combat log: how long an enemy stays listed after its nameplate vanished (out of range)
 
@@ -517,34 +622,61 @@ local function Entry(unit, token)
 		token = token, idle = not F.IsEngaged(unit, true) }
 end
 
-local function TokenEntry(k)
-	local unit = "nameplate" .. k
-	if F.IsEngaged(unit) then
-		local e = Entry(unit, k)
-		local mark = GetRaidTargetIndex(unit)
-		cacheTok[k] = { guid = e.guid, name = UnitName(unit), mark = F.Readable(mark) and mark or nil,
-			pct = e.pct, score = e.score, seen = GetTime() }
-		return e
-	end
-	-- Nameplate gone (enemy out of sight): only with a combat log can we tell whether it is still fighting
-	local c = cacheTok[k]
-	if c then
-		local alive
-		if F.HasCombatLog then
-			alive = not F.Bool(UnitExists(unit)) and F.recent[c.guid]
-				and GetTime() - F.recent[c.guid] < CACHE_SECS
-		else
-			-- No combat log: the plate is gone (nobody stands on this token any more) = enemy walked out of range.
-			-- Keep it while we are in combat; a dead enemy keeps its plate for a while and is dropped above.
-			alive = not F.Bool(UnitExists(unit)) and F.Bool(UnitAffectingCombat("player"))
-				and GetTime() - (c.seen or 0) < OUT_OF_RANGE_SECS
+-- Last known values; health only where it is readable (out of combat or on clients without secret values).
+local function Remember(e, unit)
+	local mark = GetRaidTargetIndex(unit)
+	local cur, max = UnitHealth(unit), UnitHealthMax(unit)
+	local frac
+	if F.AllReadable(cur, max) and type(cur) == "number" and type(max) == "number" and max > 0 then frac = cur / max end
+	local old = cache[e.guid]
+	cache[e.guid] = { guid = e.guid, name = UnitName(unit), mark = F.Readable(mark) and mark or nil,
+		pct = e.pct, score = e.score, seen = GetTime(), frac = frac or (old and old.frac) }
+end
+
+-- All nameplates. Returns the set of guids that have a plate right now (fighting or not).
+local function PlateEntries(list, seen)
+	local present = {}
+	for k = 1, PLATES do
+		local unit = "nameplate" .. k
+		if F.Bool(UnitExists(unit)) then
+			local guid = UnitGUID(unit)
+			present[(F.Readable(guid) and guid) or ("plate" .. k)] = true
+			if F.IsEngaged(unit) then
+				local e = Entry(unit, k)
+				if not seen[e.guid] then
+					seen[e.guid] = true
+					list[#list + 1] = e
+					Remember(e, unit)
+				end
+			end
 		end
-		if alive then
-			return { cache = c, name = c.name, tanking = false, pct = c.pct, score = c.score or 0, guid = c.guid, token = k }
-		end
-		cacheTok[k] = nil
 	end
-	return nil
+	return present
+end
+
+-- Enemies whose nameplate is gone (out of sight). With a combat log we know whether they still fight;
+-- without one they stay listed for a while as long as you are in combat.
+local function CachedEntries(list, seen, present)
+	local now = GetTime()
+	local inCombat = F.Bool(UnitAffectingCombat("player"))
+	for guid, c in pairs(cache) do
+		if not seen[guid] then
+			local alive = false
+			if not present[guid] then   -- a plate that is there but no longer fighting: dead or reset
+				if F.HasCombatLog then
+					alive = F.recent[guid] and now - F.recent[guid] < CACHE_SECS
+				else
+					alive = inCombat and now - (c.seen or 0) < OUT_OF_RANGE_SECS
+				end
+			end
+			if alive then
+				seen[guid] = true
+				list[#list + 1] = { cache = c, name = c.name, tanking = false, pct = c.pct, score = c.score or 0, guid = guid }
+			else
+				cache[guid] = nil
+			end
+		end
+	end
 end
 
 -- Pull order: guid -> running number, assigned when an enemy first shows up; cleared when the list empties
@@ -564,7 +696,7 @@ local function AssignPullOrder(list)
 end
 
 local function SortEntries(list)
-	local tank = F.db.tank
+	local tank = F.IsTank()
 	local mode = F.db.enemy.sort
 	local byName = mode == "name"
 	local byPull = mode == "pull"
@@ -582,11 +714,10 @@ local function SortEntries(list)
 	end)
 end
 
--- Enemies without a nameplate (target, focus, group targets) without duplicates of the nameplate entries.
+-- Enemies without a nameplate (target, focus, bosses, group targets) without duplicates of the nameplate entries.
 local function ExtraEntries(seen)
 	local list = {}
-	local units = { "target", "focus", "party1target", "party2target", "party3target", "party4target" }
-	for _, unit in ipairs(units) do
+	for _, unit in ipairs(F.ExtraUnits()) do
 		if F.IsEngaged(unit) then
 			local guid = UnitGUID(unit)
 			if F.Readable(guid) and guid and not seen[guid] then
@@ -611,6 +742,7 @@ end
 
 function M:Update()
 	if DemoActive() then
+		M:SetCount(#DEMO_ENEMIES)
 		for i = 1, MAX_ROWS do
 			local row, d = rows[i], DEMO_ENEMIES[i]
 			if d then
@@ -624,26 +756,15 @@ function M:Update()
 		return
 	end
 
-	local list, seen, cached = {}, {}, {}
-	for k = 1, TOKENS do
-		local e = TokenEntry(k)
-		if e then
-			if e.cache then
-				cached[#cached + 1] = e
-			else
-				list[#list + 1] = e
-				seen[e.guid] = true
-			end
-		end
-	end
+	local list, seen = {}, {}
+	local present = PlateEntries(list, seen)
 	for _, e in ipairs(ExtraEntries(seen)) do list[#list + 1] = e end
 	-- out-of-sight enemies stay listed, unless the same enemy is visible again (other nameplate / target)
-	for _, e in ipairs(cached) do
-		if not seen[e.guid] then list[#list + 1] = e; seen[e.guid] = true end
-	end
+	CachedEntries(list, seen, present)
 	SortEntries(list)
 
 	local maxRows = math.min(MAX_ROWS, F.db.enemy.maxRows or 12)
+	M:SetCount(#list)
 	for i = 1, MAX_ROWS do
 		local row, e = rows[i], list[i]
 		if e and i <= maxRows then
@@ -656,16 +777,31 @@ function M:Update()
 	end
 end
 
+-- Heading with the number of enemies (all of them, also those beyond the row limit)
+function M:SetCount(n)
+	local h = M.frame and M.frame.header
+	if not h then return end
+	if F.db.enemy.showHeader ~= false and n > 0 then
+		h:SetText(L.ENEMY_COUNT:format(n))
+		h:Show()
+	else
+		h:Hide()
+	end
+end
+
 -- Column layout (enemies per column is configurable)
 function M:ApplyLayout()
 	if not M.frame then return end
 	local pc = PerCol()
 	for i, row in ipairs(rows) do
 		row:ClearAllPoints()
-		row:SetPoint("TOPLEFT", M.frame, "TOPLEFT", math.floor((i - 1) / pc) * (ROW_W + COLGAP), -((i - 1) % pc) * PITCH + YOFF)
+		row:SetPoint("TOPLEFT", M.frame, "TOPLEFT", math.floor((i - 1) / pc) * (ROW_W + AuraWidth() + COLGAP), -((i - 1) % pc) * PITCH + YOFF)
 	end
-	local cols = math.ceil(MAX_ROWS / pc)
-	M.frame:SetSize(cols * ROW_W + (cols - 1) * COLGAP, pc * PITCH - GAP)
+	-- The frame (and its mover) is only as large as the rows that can be shown.
+	local shown = math.min(MAX_ROWS, F.db.enemy.maxRows or 12)
+	local cols = math.ceil(shown / pc)
+	pc = math.min(pc, shown)
+	M.frame:SetSize(cols * (ROW_W + AuraWidth()) + (cols - 1) * COLGAP, pc * PITCH - GAP)
 end
 
 function M:Init()
@@ -681,7 +817,11 @@ function M:Init()
 
 	for i = 1, MAX_ROWS do rows[i] = CreateRow(i) end
 	M:ApplyLayout()
-
+	-- Small heading with the number of enemies, in the gold of Blizzard's frame titles
+	f.header = F.CreateText(f, 12, "LEFT")
+	f.header:SetFontObject("GameFontNormal")
+	f.header:SetPoint("BOTTOMLEFT", f, "TOPLEFT", 22 * S, YOFF + 1)
+	f.header:Hide()
 	f.t = 0
 	f:SetScript("OnUpdate", function(self, dt)
 		self.t = self.t + dt

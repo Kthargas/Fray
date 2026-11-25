@@ -24,6 +24,8 @@ the game's own target frame. It re-sorts live, closes gaps when an enemy dies an
 - **Aggro shield**: Fray's shield at each portrait in the aggro colour (red and pulsing: the enemy is on you, orange: you just lost it or have high threat, green: safe).
 - Elite and rare markers, a separate cast strip below each frame, and a golden outline for your current target.
 - Shows only enemies fighting you or your group - mobs another player is fighting stay hidden.
+- Your own debuffs on each enemy (up to four, with stacks and remaining time), a heading with the number of enemies and the enemy's tooltip on mouseover.
+- Reads every nameplate, the boss frames and the targets of your group or raid.
 - Sorting by pull order (default), threat or name, maximum rows, rows per column, and switches for every element.
 
 ### Alerts
@@ -32,8 +34,9 @@ the game's own target frame. It re-sorts live, closes gaps when an enemy dies an
 - Test buttons for every alert.
 
 ### More
-- Target and focus **cast bars** built from Blizzard's casting bar (background, fill for casts, channels and uninterruptible casts, spark and frame); casts of your own group are hidden by default.
+- Target and focus **cast bars** built from Blizzard's casting bar (background, fill for casts, channels and uninterruptible casts, spark and frame), red "Interrupted" and a fade-out at the end; casts of your own group are hidden by default.
 - A classic minimap button with the Fray logo, the same frame as Mundi's (left click: options, right click: lock/unlock frames; can be hidden), and an entry in the addon compartment. Mundi can collect the button into its addon button window.
+- Role per character (automatic, tank, damage or healer) and optional own settings per character.
 - Settings built into the game's own options (Esc > Options > AddOns > Fray, with the pages Enemy list, Cast bars, Alerts and Actions; laid out like Mundi's), a frame mover with grid and live coordinates, global and per-element scale and a test mode.
 - English and German.
 
