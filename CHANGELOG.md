@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0 - 2026-11-25
+
+- New: cast bars of yourself, party and raid members (and their pets) are hidden by default. Option "Hide casts of your group" under Cast bars, or `/fray opt hidegroup`.
+- Changed: the settings now live in the game's own options window (Esc > Options > AddOns > Fray) with pages for Enemy list, Cast bars and Alerts, built from Blizzard's standard controls. The custom settings window is gone; `/fray` and the minimap button open the new page.
+- Buttons (unlock frames, reset positions, test mode, test alerts, reset all) are on a separate "Actions" page so they cannot taint Blizzard's own settings buttons.
+
 ## 1.0.2 - 2026-11-22
 
 - Fixed: an enemy that is tagged by you no longer drops out of the list when a player outside your group attacks it.

@@ -1,7 +1,7 @@
 local ADDON, F = ...
 _G.Fray = F
 
-F.version = "1.0.2"
+F.version = "1.1.0"
 F.modules = {}
 F.order = {}
 F.movables = {}
@@ -301,7 +301,7 @@ local defaults = {
 	grid = { enabled = true, size = 10 },
 	enemy = { showAll = false, perCol = 6, threatOrange = 50, maxRows = 12, sort = "pull",
 		plateWarn = true, showPercent = true, showPower = true, showMarker = true, showElite = true, showShield = true },
-	cast = { onlyHostile = false, target = true, focus = true, showIcon = true, showTime = true },
+	cast = { onlyHostile = false, hideGroup = true, target = true, focus = true, showIcon = true, showTime = true },
 	alerts = { sound = true, lowHealth = true, lowHealthPct = 25, gain = true, gainTank = false, loss = true,
 		tankWarn = true, threatHigh = true, threatPct = 90, onlyInGroup = true, onlyInCombat = true, pause = 8,
 		hold = 2.6, textSize = 24, showName = true,
@@ -1018,6 +1018,8 @@ end
 local function ToggleOption(tbl, key, label)
 	tbl[key] = not tbl[key]
 	F.Print(label .. ": " .. (tbl[key] and "on" or "off"))
+	local o = F.modules.options
+	if o and o.Refresh then o:Refresh() end
 end
 
 local function Help()
@@ -1029,7 +1031,7 @@ local function Help()
 	print("  /fray tank                - Tank mode (inverts threat colours and alerts)")
 	print("  /fray all                 - Enemy list: show all hostile units, not only those in combat")
 	print("  /fray plates              - Enable enemy nameplates")
-	print("  /fray opt <name>          - Toggle an option: lowhp, onlyhostile")
+	print("  /fray opt <name>          - Toggle an option: lowhp, onlyhostile, hidegroup")
 	print("  /fray test                - Show test display")
 end
 
@@ -1088,6 +1090,9 @@ SlashCmdList["FRAY"] = function(msg)
 		local o = rest:lower()
 		if o == "lowhp" then ToggleOption(F.db.alerts, "lowHealth", "Low health alert")
 		elseif o == "onlyhostile" then ToggleOption(F.db.cast, "onlyHostile", "Cast bars for enemies only")
+		elseif o == "hidegroup" then
+			F.db.cast.hideGroup = F.db.cast.hideGroup ~= false
+			ToggleOption(F.db.cast, "hideGroup", "Hide cast bars of your group")
 		else Help() end
 	elseif cmd == "atlas" then
 		F.AtlasReport()

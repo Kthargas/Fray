@@ -117,6 +117,16 @@ local function SetProgress(f, unit, channel, startMS, endMS)
 	return false
 end
 
+-- Is the unit you, a party/raid member or one of their pets?
+local function IsGroupUnit(unit)
+	if F.Bool(UnitIsUnit(unit, "player")) then return true end
+	if UnitPlayerOrPetInParty and F.Bool(UnitPlayerOrPetInParty(unit)) then return true end
+	if UnitPlayerOrPetInRaid and F.Bool(UnitPlayerOrPetInRaid(unit)) then return true end
+	if UnitInParty and F.Bool(UnitInParty(unit)) then return true end
+	if UnitInRaid and F.Readable(UnitInRaid(unit)) and UnitInRaid(unit) then return true end
+	return false
+end
+
 local function Poll(f)
 	local unit = f.unit
 	local co = F.db.cast
@@ -133,7 +143,8 @@ local function Poll(f)
 		f:Show()
 		return
 	end
-	if not F.Bool(UnitExists(unit)) or (F.db.cast.onlyHostile and not F.Bool(UnitCanAttack("player", unit))) then
+	if not F.Bool(UnitExists(unit)) or (co.onlyHostile and not F.Bool(UnitCanAttack("player", unit)))
+		or (co.hideGroup ~= false and IsGroupUnit(unit)) then
 		f:Hide()
 		return
 	end
