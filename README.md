@@ -30,9 +30,9 @@ the game's own target frame. It re-sorts live, closes gaps when an enemy dies an
 - Test buttons for every alert.
 
 ### More
-- Target and focus **cast bars** using Blizzard's casting bar art.
+- Target and focus **cast bars** using Blizzard's casting bar art (casts of your own group are hidden by default).
 - A minimap button (left click: settings, right click: lock/unlock frames; can be hidden in the settings).
-- A settings window styled like the game menu, a frame mover with grid and live coordinates, global and per-element scale,
+- Settings built into the game's own options (Esc > Options > AddOns > Fray), a frame mover with grid and live coordinates, global and per-element scale,
   frame colour presets (copper, silver, gold) and a test mode.
 
 ## Requirements
@@ -48,7 +48,8 @@ None besides the game client (World of Warcraft: Forever). Enemy nameplates have
 
 ## Usage
 
-Type `/fray` to open the settings window.
+Type `/fray` to open the settings (Esc > Options > AddOns > Fray). Buttons such as unlocking frames, test mode and
+resetting everything are on the **Actions** page below it.
 
 | Command | What it does |
 |---|---|
@@ -58,6 +59,7 @@ Type `/fray` to open the settings window.
 | `/fray reset` | Reset all frame positions |
 | `/fray toggle <module>` | Enable or disable a module (`enemy`, `cast`, `alerts`) |
 | `/fray tank` | Tank mode |
+| `/fray opt hidegroup` | Show or hide cast bars of your own group |
 | `/fray all` | Show all hostile units, not only those in combat |
 | `/fray plates` | Enable enemy nameplates |
 | `/fray test` | Show placeholder frames and a test alert |
