@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.1 - 2026-11-25
+
+- The aggro shield is back at every portrait (red and pulsing: aggro on you, orange: lost or high threat, green: little threat). Blizzard's threat glow around the frame is gone again.
+- The alert banner shows the shield in the alert colour again instead of Blizzard's alert icon.
+- The minimap button and the AddOn list show the Fray logo again.
+
 ## 1.2.0 - 2026-11-25
 
 - Blizzard art only: the aggro shield is replaced by Blizzard's own threat glow of the target frame (red and pulsing: aggro on you, orange: lost or high threat). The cast bars, alert banner and minimap button use Blizzard's casting bar, alert icon and classic minimap button art. All of Fray's own textures are gone except an invisible bar mask; the "Frame colour" option is removed with them.

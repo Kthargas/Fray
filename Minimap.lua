@@ -6,7 +6,7 @@ F:RegisterModule("minimap", M)
 -- Minimap button in the classic Blizzard look, the same as SquareMap's addon button:
 -- left click = options, right click = unlock/lock frames, drag = move along the edge of the map.
 -- SquareMap (and other button collectors) can take it into their window.
-M.ICON = "Interface\\Icons\\Ability_Warrior_DefensiveStance"
+M.ICON = F.ICON   -- Fray logo
 
 -- Round or square minimap edge (GetMinimapShape is set by minimap addons such as SquareMap).
 local function Place(btn)
@@ -55,14 +55,9 @@ function M:Init()
 	background:SetPoint("CENTER")
 
 	local icon = btn:CreateTexture(nil, "ARTWORK")
-	icon:SetSize(18, 18)
+	icon:SetSize(20, 20)
 	icon:SetPoint("CENTER")
 	icon:SetTexture(M.ICON)
-	icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-	local mask = btn:CreateMaskTexture()
-	mask:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
-	mask:SetAllPoints(icon)
-	icon:AddMaskTexture(mask)
 	btn.icon = icon
 
 	btn:SetScript("OnMouseDown", function(self) self.icon:SetPoint("CENTER", 1, -1) end)
