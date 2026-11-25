@@ -617,7 +617,7 @@ function F.OpenOptions()
 end
 
 ------------------------------------------------------------------------
--- Slash commands (same layout as SquareMap: no argument opens the options, "help" lists the rest)
+-- Slash commands (same layout as Mundi: no argument opens the options, "help" lists the rest)
 ------------------------------------------------------------------------
 local COMMANDS = {
 	{ "", L.CMD_OPTIONS },
@@ -659,7 +659,7 @@ SlashCmdList.FRAY = function(msg)
 	end
 end
 
--- Addon compartment entry (## AddonCompartmentFunc in the TOC), like SquareMap's
+-- Addon compartment entry (## AddonCompartmentFunc in the TOC), like Mundi's
 function Fray_OnAddonCompartmentClick(addonName, mouseButton)
 	if mouseButton == "RightButton" then
 		F:SetLocked(F.unlocked)

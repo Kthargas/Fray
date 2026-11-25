@@ -4,7 +4,7 @@ local O = { settings = {} }
 F:RegisterModule("options", O)
 
 -- Options in Blizzard's own settings window (Esc > Options > AddOns > Fray), built only from the stock
--- Settings controls so they look and behave like every other game option. Same layout as SquareMap:
+-- Settings controls so they look and behave like every other game option. Same layout as Mundi:
 -- the main page and its subpages hold the settings, the last subpage ("Actions") the buttons.
 
 local function ListOptions(list)
@@ -202,7 +202,7 @@ function O:BuildAlerts(category, layout)
 end
 
 ------------------------------------------------------------------------
--- Actions page: same look as SquareMap's (title, divider, sections with a label, a button and a note per row).
+-- Actions page: same look as Mundi's (title, divider, sections with a label, a button and a note per row).
 ------------------------------------------------------------------------
 local function TestAlert(title, sub, kind, sound, ...)
 	local A = F.modules.alerts

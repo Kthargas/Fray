@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.2 - 2026-11-25
+
+- Tagline in the AddOn list: "Fray - Your Enemies, but listed".
+- SquareMap is now called Mundi; the texts that mention it say so.
+
 ## 1.2.1 - 2026-11-25
 
 - The aggro shield is back at every portrait (red and pulsing: aggro on you, orange: lost or high threat, green: little threat). Blizzard's threat glow around the frame is gone again.

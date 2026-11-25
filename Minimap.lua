@@ -3,12 +3,12 @@ local L = F.L
 local M = {}
 F:RegisterModule("minimap", M)
 
--- Minimap button in the classic Blizzard look, the same as SquareMap's addon button:
+-- Minimap button in the classic Blizzard look, the same as Mundi's addon button:
 -- left click = options, right click = unlock/lock frames, drag = move along the edge of the map.
--- SquareMap (and other button collectors) can take it into their window.
+-- Mundi (and other button collectors) can take it into their window.
 M.ICON = F.ICON   -- Fray logo
 
--- Round or square minimap edge (GetMinimapShape is set by minimap addons such as SquareMap).
+-- Round or square minimap edge (GetMinimapShape is set by minimap addons such as Mundi).
 local function Place(btn)
 	local angle = math.rad(F.db.minimap.angle or 215)
 	local x, y = math.cos(angle), math.sin(angle)

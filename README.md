@@ -4,6 +4,8 @@
 
 <h1 align="center">Fray</h1>
 
+<p align="center"><em>Your Enemies, but listed</em></p>
+
 <p align="center">
   A live enemy list for <strong>World of Warcraft: Forever</strong> - threat, aggro alerts and cast bars,<br>
   built from Blizzard's own unit frame art.
@@ -31,8 +33,8 @@ the game's own target frame. It re-sorts live, closes gaps when an enemy dies an
 
 ### More
 - Target and focus **cast bars** built from Blizzard's casting bar (background, fill for casts, channels and uninterruptible casts, spark and frame); casts of your own group are hidden by default.
-- A classic minimap button with the Fray logo, the same frame as SquareMap's (left click: options, right click: lock/unlock frames; can be hidden), and an entry in the addon compartment. SquareMap can collect the button into its addon button window.
-- Settings built into the game's own options (Esc > Options > AddOns > Fray, with the pages Enemy list, Cast bars, Alerts and Actions; laid out like SquareMap's), a frame mover with grid and live coordinates, global and per-element scale and a test mode.
+- A classic minimap button with the Fray logo, the same frame as Mundi's (left click: options, right click: lock/unlock frames; can be hidden), and an entry in the addon compartment. Mundi can collect the button into its addon button window.
+- Settings built into the game's own options (Esc > Options > AddOns > Fray, with the pages Enemy list, Cast bars, Alerts and Actions; laid out like Mundi's), a frame mover with grid and live coordinates, global and per-element scale and a test mode.
 - English and German.
 
 ## Requirements
