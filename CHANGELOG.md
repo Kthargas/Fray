@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.0 - 2026-11-25
+
+- Blizzard art only: the aggro shield is replaced by Blizzard's own threat glow of the target frame (red and pulsing: aggro on you, orange: lost or high threat). The cast bars, alert banner and minimap button use Blizzard's casting bar, alert icon and classic minimap button art. All of Fray's own textures are gone except an invisible bar mask; the "Frame colour" option is removed with them.
+- German translation; settings, chat messages and alerts follow the game language.
+- Settings laid out like SquareMap: Fray (role, appearance, frames), Enemy list, Cast bars, Alerts and Actions. The Actions page uses the same layout as SquareMap's.
+- Slash commands like SquareMap: `/fray` opens the options, `/fray help` lists the commands, `/fray reset` asks before it resets everything (positions are reset on the Actions page). `grid`, `toggle`, `tank`, `all`, `opt`, `atlas`, `probe` and `debug` are removed; their settings are on the options pages.
+- Minimap button looks like SquareMap's addon button and follows a square minimap edge; new entry in the addon compartment.
+- Removed the fallback look for clients without Blizzard's unit frame art (custom plates, shields, glows), the unused settings-window code, and the login message. The TOC now targets WoW Forever only.
+
 ## 1.1.0 - 2026-11-25
 
 - New: cast bars of yourself, party and raid members (and their pets) are hidden by default. Option "Hide casts of your group" under Cast bars, or `/fray opt hidegroup`.
