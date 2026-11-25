@@ -11,7 +11,11 @@ local KINDS = {
 	standard = { atlas = "castFill", color = { 1, 0.7, 0 } },
 	channel = { atlas = "castChannel", color = { 0.5, 0.82, 0.55 } },
 	locked = { atlas = "castLocked", color = { 0.62, 0.6, 0.66 } },
+	interrupted = { atlas = "castInterrupted", color = { 0.9, 0.12, 0.1 } },
 }
+
+-- After a cast the bar stays a moment and fades out like Blizzard's: interrupted casts turn red first.
+local HOLD_DONE, HOLD_INTERRUPTED, FADE = 0.1, 0.6, 0.3
 
 -- Cast bar built from Blizzard's casting bar: background, fill, spark and frame; spell icon on the left.
 local function CreateCastBar(key, unit, w, h, label, defX, defY)
@@ -134,6 +138,8 @@ local function Poll(f)
 		if not F.unlocked then f:Hide() return end
 	end
 	if F.unlocked then
+		f:SetAlpha(1)
+		f.ended = nil
 		SetKind(f, "standard")
 		f.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
 		f.bar:SetMinMaxValues(0, 1)
@@ -151,7 +157,7 @@ local function Poll(f)
 
 	local channel = false
 	local n = select("#", UnitCastingInfo(unit))
-	local name, tex, startMS, endMS, notInt
+	local name, tex, startMS, endMS, notInt, _
 	if n > 0 then
 		name, _, tex, startMS, endMS, _, _, notInt = UnitCastingInfo(unit)
 	else
@@ -162,10 +168,34 @@ local function Poll(f)
 		end
 	end
 	if n == 0 then
-		f:Hide()
+		if not f:IsShown() then return end
+		if not f.ended then
+			f.ended = GetTime()
+			if f.interrupted and f.ended - f.interrupted < 0.5 then
+				if f.bar.ClearTimerDuration then pcall(f.bar.ClearTimerDuration, f.bar) end
+				SetKind(f, "interrupted")
+				f.bar:SetMinMaxValues(0, 1)
+				f.bar:SetValue(1)
+				f.spell:SetText(INTERRUPTED or L.INTERRUPTED)
+				f.time:SetText("")
+				f.hold = HOLD_INTERRUPTED
+			else
+				f.hold = HOLD_DONE
+			end
+		end
+		local t = GetTime() - f.ended - f.hold
+		if t >= FADE then
+			f:Hide()
+			f:SetAlpha(1)
+			f.ended, f.interrupted = nil, nil
+		elseif t > 0 then
+			f:SetAlpha(1 - t / FADE)
+		end
 		return
 	end
 
+	f.ended = nil
+	f:SetAlpha(1)
 	local locked = F.Readable(notInt) and notInt == true
 	SetKind(f, locked and "locked" or (channel and "channel" or "standard"))
 	if not SetProgress(f, unit, channel, startMS, endMS) then
@@ -192,6 +222,12 @@ function M:Init()
 		for i = 1, #bars do Poll(bars[i]) end
 	end)
 	M.driver = d
+	-- Remember interrupts; the bar shows them when the cast disappears.
+	F:On("UNIT_SPELLCAST_INTERRUPTED", function(_, unit)
+		for i = 1, #bars do
+			if bars[i].unit == unit then bars[i].interrupted = GetTime() end
+		end
+	end)
 end
 
 function M:SetEnabled(on)

@@ -15,10 +15,14 @@ local function ListOptions(list)
 	end
 end
 
--- A setting stored in F.db[section][field] (section nil: F.db[field]). onSet runs after the value changed.
+-- A setting stored in F.db[section][field] (section nil: F.db[field]; section "char": this character's
+-- own settings, outside the profile). onSet runs after the value changed.
 function O:Proxy(category, section, field, varType, name, default, onSet)
 	local variable = "FRAY_" .. (section and section:upper() .. "_" or "") .. field:upper()
-	local function tbl() return section and F.db[section] or F.db end
+	local function tbl()
+		if section == "char" then return F.char end
+		return section and F.db[section] or F.db
+	end
 	local setting = Settings.RegisterProxySetting(category, variable, varType, name, default,
 		function()
 			local value = tbl()[field]
@@ -85,7 +89,16 @@ end
 ------------------------------------------------------------------------
 function O:BuildGeneral(category, layout)
 	Header(layout, L.SECTION_ROLE)
-	self:Checkbox(category, nil, "tank", L.TANK, L.TANK_TT, false)
+	self:Dropdown(category, "char", "role", L.ROLE, L.ROLE_TT, "AUTO", {
+		{ key = "AUTO", label = L.ROLE_AUTO },
+		{ key = "TANK", label = L.ROLE_TANK },
+		{ key = "DPS", label = L.ROLE_DPS },
+	})
+	local own = Settings.RegisterProxySetting(category, "FRAY_CHAR_OWN", Settings.VarType.Boolean, L.OWN_PROFILE, false,
+		function() return F.char.own and true or false end,
+		function(value) F.SetOwnProfile(value) end)
+	self.settings[#self.settings + 1] = own
+	Settings.CreateCheckbox(category, own, L.OWN_PROFILE_TT)
 
 	Header(layout, L.SECTION_APPEARANCE)
 	self:Slider(category, nil, "scale", L.SCALE, L.SCALE_TT, 1, 0.5, 1.5, 0.05, Percent, F.ApplyScale)
@@ -116,7 +129,7 @@ function O:BuildEnemy(category, layout)
 	Header(layout, L.SECTION_DISPLAY)
 	Dep(self:Scale(category, "enemy", L.ENEMY_SCALE))
 	Dep(self:Slider(category, "enemy", "perCol", L.PER_COL, nil, 6, 3, 9, 1, nil, function() F.modules.enemy:ApplyLayout() end))
-	Dep(self:Slider(category, "enemy", "maxRows", L.MAX_ROWS, nil, 12, 3, 18, 1))
+	Dep(self:Slider(category, "enemy", "maxRows", L.MAX_ROWS, nil, 12, 3, 18, 1, nil, function() F.modules.enemy:ApplyLayout() end))
 	Dep(self:Dropdown(category, "enemy", "sort", L.SORT, nil, "pull", {
 		{ key = "pull", label = L.SORT_PULL },
 		{ key = "threat", label = L.SORT_THREAT },
@@ -128,6 +141,10 @@ function O:BuildEnemy(category, layout)
 	Dep(self:Checkbox(category, "enemy", "showPower", L.SHOW_POWER, L.SHOW_POWER_TT, true))
 	Dep(self:Checkbox(category, "enemy", "showMarker", L.SHOW_MARKER, nil, true))
 	Dep(self:Checkbox(category, "enemy", "showElite", L.SHOW_ELITE, nil, true))
+	Dep(self:Checkbox(category, "enemy", "showDebuffs", L.SHOW_DEBUFFS, L.SHOW_DEBUFFS_TT, true,
+		function() F.modules.enemy:ApplyLayout() end))
+	Dep(self:Checkbox(category, "enemy", "showHeader", L.SHOW_HEADER, L.SHOW_HEADER_TT, true))
+	Dep(self:Checkbox(category, "enemy", "tooltip", L.SHOW_TOOLTIP, L.SHOW_TOOLTIP_TT, true))
 
 	Header(layout, L.SECTION_AGGRO)
 	local glow = Dep(self:Checkbox(category, "enemy", "showShield", L.SHOW_SHIELD, L.SHOW_SHIELD_TT, true))
@@ -270,6 +287,17 @@ function O:CreateActionsPanel()
 	panel:SetScript("OnShow", function() lock:SetText(F.unlocked and L.LOCK_BTN or L.UNLOCK_BTN) end)
 	return panel
 end
+
+StaticPopupDialogs["FRAY_RELOAD"] = {
+	text = L.RELOAD_PROFILE,
+	button1 = L.RELOAD_NOW,
+	button2 = L.RELOAD_LATER,
+	OnAccept = function() ReloadUI() end,
+	timeout = 0,
+	whileDead = true,
+	hideOnEscape = true,
+	preferredIndex = 3,
+}
 
 StaticPopupDialogs["FRAY_RESET_ALL"] = {
 	text = L.RESET_CONFIRM,

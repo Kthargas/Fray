@@ -40,6 +40,7 @@ F.ATLAS = {
 	castFill = { "UI-CastingBar-Filling-Standard", "ui-castingbar-filling-standard" },
 	castChannel = { "UI-CastingBar-Filling-Channel", "ui-castingbar-filling-channel" },
 	castLocked = { "UI-CastingBar-Uninterruptable", "ui-castingbar-uninterruptable" },
+	castInterrupted = { "UI-CastingBar-Interrupted", "ui-castingbar-interrupted" },
 	castSpark = { "UI-CastingBar-Pip", "ui-castingbar-pip", "UI-CastingBar-Spark" },
 }
 
@@ -96,7 +97,6 @@ function F.PlaceThreeSlice(t, parent, x, y, w, h)
 end
 
 local defaults = {
-	tank = false,
 	scale = 1,
 	scales = {},
 	modules = { enemy = true, cast = true, alerts = true },
@@ -104,7 +104,8 @@ local defaults = {
 	minimap = { hide = false, angle = 215 },
 	grid = { enabled = true, size = 10 },
 	enemy = { showAll = false, perCol = 6, threatOrange = 50, maxRows = 12, sort = "pull",
-		plateWarn = true, showPercent = true, showPower = true, showMarker = true, showElite = true, showShield = true },
+		plateWarn = true, showPercent = true, showPower = true, showMarker = true, showElite = true, showShield = true,
+		tooltip = true, showDebuffs = true, showHeader = true },
 	cast = { onlyHostile = false, hideGroup = true, target = true, focus = true, showIcon = true, showTime = true },
 	alerts = { sound = true, lowHealth = true, lowHealthPct = 25, gain = true, gainTank = false, loss = true,
 		tankWarn = true, threatHigh = true, threatPct = 90, onlyInGroup = true, onlyInCombat = true, pause = 8,
@@ -348,6 +349,19 @@ function F.IsEngaged(unit, strict)
 	return gk ~= nil and F.tagged[gk] == true
 end
 
+-- Enemies that may have no nameplate: target, focus, boss frames and the targets of the group or raid.
+local EXTRA_PARTY, EXTRA_RAID = { "target", "focus" }, { "target", "focus" }
+for i = 1, 5 do
+	EXTRA_PARTY[#EXTRA_PARTY + 1] = "boss" .. i
+	EXTRA_RAID[#EXTRA_RAID + 1] = "boss" .. i
+end
+for i = 1, 4 do EXTRA_PARTY[#EXTRA_PARTY + 1] = "party" .. i .. "target" end
+for i = 1, 40 do EXTRA_RAID[#EXTRA_RAID + 1] = "raid" .. i .. "target" end
+
+function F.ExtraUnits()
+	return IsInRaid() and EXTRA_RAID or EXTRA_PARTY
+end
+
 function F.EnumerateEnemies()
 	local list, seen = {}, {}
 	local function add(unit)
@@ -362,9 +376,7 @@ function F.EnumerateEnemies()
 	end
 	-- Query unit tokens directly (C_NamePlate.GetNamePlates does not return usable data on every client).
 	for i = 1, 40 do add("nameplate" .. i) end
-	add("target")
-	add("focus")
-	for i = 1, 4 do add("party" .. i .. "target") end
+	for _, unit in ipairs(F.ExtraUnits()) do add(unit) end
 	return list
 end
 
@@ -386,6 +398,45 @@ local function Place(frame, m)
 	frame:SetScale(s)
 	frame:ClearAllPoints()
 	frame:SetPoint("CENTER", UIParent, "CENTER", x / s, y / s)
+end
+
+------------------------------------------------------------------------
+-- Profiles and role
+------------------------------------------------------------------------
+F.SHARED = "Default"
+
+function F.CharKey()
+	-- GetRealmName is ready at load time (UnitFullName may not be yet), so keys stay the same every session.
+	return (UnitName("player") or "?") .. "-" .. (GetRealmName() or "?")
+end
+
+-- Switch this character between the shared profile and its own one (a copy of the shared one). Needs a reload.
+function F.SetOwnProfile(own)
+	local char = F.char
+	if (char.own and true or false) == own then return end
+	char.own = own or nil
+	local key = F.CharKey()
+	if own and type(F.root.profiles[key]) ~= "table" then
+		F.root.profiles[key] = CopyTable(F.root.profiles[F.SHARED])
+	end
+	StaticPopup_Show("FRAY_RELOAD")
+end
+
+-- Shapeshift forms that mean tanking (classic-style specs): bear, dire bear, defensive stance.
+local TANK_FORMS = { [5] = true, [8] = true, [18] = true }
+
+-- Tank mode: chosen per character, or detected from the group role, the specialisation or a tank form.
+function F.IsTank()
+	local role = F.char and F.char.role or "AUTO"
+	if role == "TANK" then return true end
+	if role == "DPS" then return false end
+	if UnitGroupRolesAssigned and UnitGroupRolesAssigned("player") == "TANK" then return true end
+	if GetSpecialization and GetSpecializationRole then
+		local spec = GetSpecialization()
+		if spec and GetSpecializationRole(spec) == "TANK" then return true end
+	end
+	local form = GetShapeshiftFormID and GetShapeshiftFormID()
+	return form and TANK_FORMS[form] or false
 end
 
 -- Delete all settings; the defaults apply again on the next load
@@ -578,12 +629,34 @@ boot:RegisterEvent("PLAYER_LOGIN")
 boot:SetScript("OnEvent", function(_, event, arg1)
 	if event == "ADDON_LOADED" and arg1 == ADDON then
 		FRAYDB = FRAYDB or {}
-		Merge(FRAYDB, defaults)
+		local root = FRAYDB
+		-- 1.3.0: settings live in profiles. Everything saved so far becomes the shared profile.
+		if type(root.profiles) ~= "table" then
+			local old = {}
+			for k, v in pairs(root) do old[k] = v; root[k] = nil end
+			root.profiles = { [F.SHARED] = old }
+		end
+		root.chars = root.chars or {}
+		local shared = root.profiles[F.SHARED] or {}
+		root.profiles[F.SHARED] = shared
+		-- Per character: the role and whether the character has its own profile.
+		local key = F.CharKey()
+		local char = root.chars[key] or {}
+		root.chars[key] = char
+		if char.role == nil then
+			-- The old account-wide tank switch goes to the first character that logs in, the others detect it.
+			char.role = shared.tank and "TANK" or "AUTO"
+			shared.tank = nil
+		end
+		local name = char.own and key or F.SHARED
+		if type(root.profiles[name]) ~= "table" then root.profiles[name] = CopyTable(shared) end
+		local db = root.profiles[name]
+		Merge(db, defaults)
 		-- one-time: the new default sort order is pull order
-		if not FRAYDB.sortMigrated then FRAYDB.sortMigrated = true; FRAYDB.enemy.sort = "pull" end
+		if not db.sortMigrated then db.sortMigrated = true; db.enemy.sort = "pull" end
 		-- 1.2.0: Blizzard art only, the frame colour option is gone.
-		FRAYDB.frameStyle = nil
-		F.db = FRAYDB
+		db.frameStyle = nil
+		F.root, F.char, F.db = root, char, db
 	elseif event == "PLAYER_LOGIN" then
 		for _, name in ipairs(F.order) do
 			local m = F.modules[name]

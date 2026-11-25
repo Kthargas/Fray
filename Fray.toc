@@ -3,7 +3,7 @@
 ## Notes: Live enemy list with threat, aggro alerts, target and focus cast bars. Built from Blizzard's own unit frame art.
 ## Notes-deDE: Live-Gegnerliste mit Bedrohung, Aggro-Warnungen und Zauberleisten für Ziel und Fokus. Gebaut aus Blizzards eigener Einheitenrahmen-Grafik.
 ## Author: Kthargas
-## Version: 1.2.2
+## Version: 1.3.0
 ## IconTexture: Interface\AddOns\Fray\Textures\Icon
 ## SavedVariables: FRAYDB
 ## AddonCompartmentFunc: Fray_OnAddonCompartmentClick
