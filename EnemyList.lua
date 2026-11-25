@@ -3,7 +3,7 @@ local L = F.L
 local M = {}
 F:RegisterModule("enemy", M)
 
--- Enemy list: Blizzard's own target frame art, mirrored (portrait on the left), with Blizzard's threat glow,
+-- Enemy list: Blizzard's own target frame art, mirrored (portrait on the left), with Fray's aggro shield,
 -- elite icons, resource bar and a cast strip below each frame.
 -- The rows are normal (non-secure) frames: they are sorted live by threat in combat and
 -- close up without gaps. There is deliberately no click-to-target: secure code does not know
@@ -23,7 +23,7 @@ local YOFF = 12 * S   -- the frame art only starts about 12 px below the frame e
 local rows = {}
 
 -- Status = aggro situation relative to YOU: red = you have aggro, orange = aggro lost / high threat,
--- green = little threat (no glow).
+-- green = little threat.
 local hadAggro = {}     -- guid -> time at which the enemy was last on you
 local LOST_SECS = 15     -- after losing aggro the enemy stays orange this long (as long as there is still some threat)
 
@@ -121,26 +121,33 @@ local function CreateRow(index)
 		row.type:SetWidth(row.type:GetWidth() * 1.015)
 	end
 
-	-- Threat: Blizzard's combat glow of the target frame, the way the target frame shows aggro.
-	-- Red as it is (pulsing), orange as a desaturated and tinted copy; two layers keep it bright.
-	row.threat = {}
-	for i = 1, 2 do
-		local t = NewAtlasTex(row, "ARTWORK", 1 + i, "tFlash")
-		if t then
-			t:SetPoint("CENTER", row, "CENTER", 0, 2 * S)
-			t:Hide()
-			row.threat[#row.threat + 1] = t
-		end
-	end
-	if row.threat[1] then
-		local ag = row.threat[1]:CreateAnimationGroup()
-		ag:SetLooping("BOUNCE")
-		local an = ag:CreateAnimation("Alpha")
-		an:SetFromAlpha(0.35)
-		an:SetToAlpha(1)
-		an:SetDuration(0.5)
-		row.pulse = ag
-	end
+	-- Aggro shield (bottom left of the portrait): Fray's crest shield in the status colour, bronze frame,
+	-- glow behind it (pulsing on red).
+	local badge = CreateFrame("Frame", nil, row)
+	badge:SetSize(46 * S, 46 * S)
+	badge:SetPoint("CENTER", row.portrait, "BOTTOMLEFT", -2 * S, 4 * S)
+	badge:SetFrameLevel(lvl + 7)
+	badge.glow = badge:CreateTexture(nil, "BACKGROUND", nil, 0)
+	badge.glow:SetPoint("CENTER")
+	badge.glow:SetSize(62 * S, 62 * S)
+	badge.glow:SetTexture(F.TEXROOT .. "Shield-Red")
+	badge.glow:SetBlendMode("ADD")
+	badge.glow:Hide()
+	badge.fill = badge:CreateTexture(nil, "ARTWORK", nil, 1)
+	badge.fill:SetAllPoints()
+	badge.fill:SetTexture(F.TEXROOT .. "Shield-Red")
+	badge.frame = badge:CreateTexture(nil, "ARTWORK", nil, 2)
+	badge.frame:SetAllPoints()
+	badge.frame:SetTexture(F.TEXROOT .. "Shield-Frame")
+	badge.frame:SetVertexColor(F.SHIELD_RIM[1], F.SHIELD_RIM[2], F.SHIELD_RIM[3])
+	local ag = badge.glow:CreateAnimationGroup()
+	ag:SetLooping("BOUNCE")
+	local an = ag:CreateAnimation("Alpha")
+	an:SetFromAlpha(0.2)
+	an:SetToAlpha(0.9)
+	an:SetDuration(0.5)
+	badge.pulse = ag
+	row.badge = badge
 
 	-- Bars
 	row.hp = AtlasStatusBar(row, lvl, 123.0, 19.5)
@@ -336,23 +343,30 @@ local function SetMark(row, idx)
 	end
 end
 
-local function SetStatus(row, status)
-	local show = F.db.enemy.showShield ~= false and (status == "red" or status == "orange")
-	for _, t in ipairs(row.threat) do
-		t:SetShown(show)
-		if status == "orange" then
-			t:SetDesaturated(true)
-			t:SetVertexColor(1, 0.62, 0.12)
-		else
-			t:SetDesaturated(false)
-			t:SetVertexColor(1, 1, 1)
-		end
-	end
-	if not row.pulse then return end
-	if show and status == "red" then
-		if not row.pulse:IsPlaying() then row.pulse:Play() end
+local STATUS_TEX = { red = "Shield-Red", orange = "Shield-Orange", green = "Shield-Green" }
+
+-- grey = enemy out of sight: shield faded, no glow
+local function SetStatus(row, status, grey)
+	local b = row.badge
+	b:SetShown(F.db.enemy.showShield ~= false)
+	local tex = F.TEXROOT .. (STATUS_TEX[status] or STATUS_TEX.orange)
+	b.fill:SetTexture(tex)
+	b.glow:SetTexture(tex)
+	b.fill:SetDesaturated(grey and true or false)
+	b.frame:SetDesaturated(grey and true or false)
+	b.fill:SetAlpha(grey and 0.55 or 1)
+	b.frame:SetAlpha(grey and 0.55 or 1)
+	if not grey and status == "red" then
+		b.glow:SetAlpha(0.9)
+		b.glow:Show()
+		if not b.pulse:IsPlaying() then b.pulse:Play() end
+	elseif not grey and status == "orange" then
+		b.pulse:Stop()
+		b.glow:SetAlpha(0.45)
+		b.glow:Show()
 	else
-		row.pulse:Stop()
+		b.pulse:Stop()
+		b.glow:Hide()
 	end
 end
 
@@ -373,7 +387,7 @@ local function FillCached(row, e)
 	ClearPortrait(row)
 	row.info:SetText(L.OUT_OF_SIGHT)
 	row.info:SetTextColor(0.7, 0.7, 0.7)
-	SetStatus(row, nil)
+	SetStatus(row, "orange", true)
 	SetMark(row, c.mark)
 	SetSelected(row, false)
 end

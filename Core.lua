@@ -9,9 +9,12 @@ F.movables = {}
 F.unlocked = false
 
 F.WHITE = "Interface\\Buttons\\WHITE8X8"
--- The only file Fray ships: an invisible mask that rounds the right end of the health and resource bars
--- (Blizzard's own masks cannot be mirrored). Everything you see is Blizzard art.
-F.BAR_MASK = "Interface\\AddOns\\Fray\\Textures\\BarMask"
+-- Fray's own files: the logo, the aggro shields and an invisible mask that rounds the right end of the
+-- health and resource bars (Blizzard's own masks cannot be mirrored). Everything else is Blizzard art.
+F.TEXROOT = "Interface\\AddOns\\Fray\\Textures\\"
+F.BAR_MASK = F.TEXROOT .. "BarMask"
+F.ICON = F.TEXROOT .. "Icon"
+F.SHIELD_RIM = { 0.88, 0.70, 0.48 }   -- bronze tint of the shield frame
 F.FONT = STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
 
 -- Blizzard atlases: one candidate list per purpose, the first name the client knows is used.

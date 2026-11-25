@@ -7,11 +7,11 @@ local state = {}      -- guid -> had aggro at the last scan
 local lastWarn = {}   -- guid -> time of the last alert
 local lastLowHP = 0
 
--- Title colour per kind; the icon above is Blizzard's alert icon of the popup dialogs.
+-- Per kind: Fray's shield above the text and the title colour.
 local KINDS = {
-	red = { 1, 0.5, 0.44 },
-	orange = { 1, 0.78, 0.36 },
-	green = { 0.62, 0.95, 0.66 },
+	red = { tex = "Shield-Red", 1, 0.5, 0.44 },
+	orange = { tex = "Shield-Orange", 1, 0.78, 0.36 },
+	green = { tex = "Shield-Green", 0.62, 0.95, 0.66 },
 }
 
 -- Alert sounds (client files); "off" = no sound
@@ -33,7 +33,7 @@ function M.PlaySound(key)
 	end
 end
 
--- Banner like Blizzard's boss warnings: icon, large coloured title with a thick outline, subtitle below,
+-- Banner like Blizzard's boss warnings: status shield, large coloured title with a thick outline, subtitle below,
 -- all centred. kind: red / orange / green.
 -- sub: format string, followed by its values ("%s  >  %s", name, target); names may be secret values.
 -- soundOpt: name of the sound setting ("soundGain" ...), false/nil = no sound.
@@ -44,9 +44,10 @@ function M:Alert(title, sub, kind, soundOpt, ...)
 	local color = KINDS[kind] or KINDS.red
 	local size = o.textSize or 24
 	f.title:SetFont(F.FONT, size, "THICKOUTLINE")
-	f:SetHeight(size + 82)
+	f:SetHeight(size + 88)
 	f.title:SetText(title or "")
 	f.title:SetTextColor(color[1], color[2], color[3])
+	f.icon:SetTexture(F.TEXROOT .. color.tex)
 	if sub and o.showName ~= false then f.sub:SetFormattedText(sub, ...) else f.sub:SetText("") end
 	f.start = GetTime()
 	f:SetAlpha(0)
@@ -136,12 +137,16 @@ function M:Init()
 	inner:SetAllPoints()
 	f.inner = inner
 	f.icon = inner:CreateTexture(nil, "ARTWORK")
-	f.icon:SetTexture("Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew")
-	f.icon:SetSize(44, 44)
+	f.icon:SetTexture(F.TEXROOT .. "Shield-Red")
+	f.icon:SetSize(50, 50)
 	f.icon:SetPoint("TOP", inner, "TOP", 0, 0)
+	f.iconFrame = inner:CreateTexture(nil, "ARTWORK", nil, 1)
+	f.iconFrame:SetTexture(F.TEXROOT .. "Shield-Frame")
+	f.iconFrame:SetAllPoints(f.icon)
+	f.iconFrame:SetVertexColor(F.SHIELD_RIM[1], F.SHIELD_RIM[2], F.SHIELD_RIM[3])
 	f.title = F.CreateText(inner, 24, "CENTER")
 	f.title:SetFont(F.FONT, 24, "THICKOUTLINE")
-	f.title:SetPoint("TOP", f.icon, "BOTTOM", 0, -6)
+	f.title:SetPoint("TOP", f.icon, "BOTTOM", 0, -4)
 	f.title:SetWidth(700)
 	f.sub = F.CreateText(inner, 13, "CENTER")
 	f.sub:SetFont(F.FONT, 13, "OUTLINE")

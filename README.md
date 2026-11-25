@@ -19,7 +19,7 @@ the game's own target frame. It re-sorts live, closes gaps when an enemy dies an
 ### Enemy list
 - Frames built from Blizzard's unit frame atlases (mirrored, portrait on the left): name banner, health bar, resource bar
   (mana, rage, energy, ...), real portrait and raid marker.
-- **Aggro glow**: Blizzard's own threat glow of the target frame around each frame (red and pulsing: the enemy is on you, orange: you just lost it or have high threat, no glow: safe).
+- **Aggro shield**: Fray's shield at each portrait in the aggro colour (red and pulsing: the enemy is on you, orange: you just lost it or have high threat, green: safe).
 - Elite and rare markers, a separate cast strip below each frame, and a golden outline for your current target.
 - Shows only enemies fighting you or your group - mobs another player is fighting stay hidden.
 - Sorting by pull order (default), threat or name, maximum rows, rows per column, and switches for every element.
@@ -31,7 +31,7 @@ the game's own target frame. It re-sorts live, closes gaps when an enemy dies an
 
 ### More
 - Target and focus **cast bars** built from Blizzard's casting bar (background, fill for casts, channels and uninterruptible casts, spark and frame); casts of your own group are hidden by default.
-- A classic minimap button, the same look as SquareMap's (left click: options, right click: lock/unlock frames; can be hidden), and an entry in the addon compartment. SquareMap can collect the button into its addon button window.
+- A classic minimap button with the Fray logo, the same frame as SquareMap's (left click: options, right click: lock/unlock frames; can be hidden), and an entry in the addon compartment. SquareMap can collect the button into its addon button window.
 - Settings built into the game's own options (Esc > Options > AddOns > Fray, with the pages Enemy list, Cast bars, Alerts and Actions; laid out like SquareMap's), a frame mover with grid and live coordinates, global and per-element scale and a test mode.
 - English and German.
 
@@ -74,7 +74,7 @@ Everything else (tank mode, modules, grid, single options) is in the settings.
 ## Credits and licences
 
 - Fray is released under the [MIT License](LICENSE).
-- Fray contains no third-party assets. Everything you see is the game's own interface art and fonts; the only file Fray ships is an invisible mask that rounds the end of the mirrored health and resource bars.
+- Fray contains no third-party assets. Fray's own files (logo, aggro shields and an invisible bar mask) were made for Fray; everything else is the game's own interface art and fonts.
 - Fray does not ship Blizzard art; it only refers to the client's interface graphics by name (the game loads them).
 - *World of Warcraft* is a trademark of Blizzard Entertainment, Inc. This project is not affiliated with or endorsed by Blizzard.
 
